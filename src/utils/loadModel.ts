@@ -39,7 +39,7 @@ export function loadSTLModel(data) {
     const { width, height, depth } = calculateObjectDimensions(geometry)
     const dimensions = { x: width, y: height, z: depth }
 
-    const scaledGeometry = scaleGeometry(geometry, 9)
+    const scaledGeometry = scaleGeometry(geometry, 0.45)
 
     const { totalVolume: innerVolume } = calculateExactVolume(scaledGeometry)
     const shellVolume = totalVolume - innerVolume
@@ -189,6 +189,8 @@ function scaleGeometry(geometry, wallThickness) {
     const scaleX = Math.max(1 - wallThickness / size.x, 0.01)
     const scaleY = Math.max(1 - wallThickness / size.y, 0.01)
     const scaleZ = Math.max(1 - wallThickness / size.z, 0.01)
+    console.log(scaleX)
+    console.log(scaleY)
 
     // Scale the geometry towards its center
     scaledGeometry.scale(scaleX, scaleY, scaleZ)

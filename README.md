@@ -1,50 +1,37 @@
-# React + TypeScript + Vite
+1. _Nahrání modelu_
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+    - Uživatel nejprve nahraje model pro tisk.
+    - Alternativně může uživatel zadat odkaz na stránku s modelem nebo podat poptávku na služby bez nahraného modelu.
 
-Currently, two official plugins are available:
+2. _Výběr parametrů tisku_
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+    - _Pevnost_: Uživatel zvolí požadovanou pevnost (např. nízká, střední, vysoká).
+    - _Materiál_: Uživatel zvolí materiál (např. PLA, ABS, PETG).
+    - _Kvalita povrchu_: Uživatel zvolí požadovanou kvalitu povrchu (např. hrubá, standardní, jemná).
+    - _Barva_: Uživatel si může zvolit barvu (bílá, černá, nebo jiná - specifikuje v poznámce).
+    - _Prostředí_: Uživatel zvolí, zda bude výtisk používán v interiéru, exteriéru, nebo na přímém slunci.
+        - Poznámka: Toto je pouze informativní údaj pro mě, abych mohl doporučit vhodný materiál. Například pokud je zvolen materiál PLA a prostředí "přímé slunce", abych mohl upozornit že material není vhodný
+    - _Počet kusů_: Uživatel zadá počet kusů.
 
-## Expanding the ESLint configuration
+3. _Cenová kalkulace_
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+    - Cena bude ovlivněna parametry: _kvalita_, _pevnost_, _materiál_ a _počet kusů_.
+    - Minimální cena zakázky je 200 Kč. Pokud kalkulačka odhadne cenu nižší než 200 Kč, nebude možné objednávku odeslat, dokud uživatel nepotvrdí, že souhlasí s minimální cenou 200 Kč.
 
-- Configure the top-level `parserOptions` property like this:
+4. _Prostor pro zprávu_
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+    - Uživatel bude mít možnost zadat detailní informace o tisku v textovém poli "Zpráva pro zadavatele" (např. specifické požadavky, poznámky).
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+5. _Kontaktní údaje_
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+    - _Jméno_
+    - _Příjmení_
+    - _Adresa_
+    - _Telefon_
+    - _E-mail_
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+6. _Alternativní poptávka_
+
+    - Pokud uživatel nemá vlastní model, musí být možnost zadat pouze poptávku na služby (např. popis projektu, požadavky, odkazy na modely).
+
+další věc je ta že ja musím mít nějak možnost proměné měnit v kalkulačce např zdražit proste musím mit kontrolu nad proměnýma

@@ -20,7 +20,7 @@ function App() {
 
     return (
         <main className='flex flex-col items-center'>
-            <div className='sm:w-96 w-full'>
+            <div className='sm:w-1/2 lg:w-1/3 w-full'>
                 <h1 className='text-center'>Poptávkový formulář</h1>
                 <div className='w-full flex items-center flex-col sm:flex-row gap-2 mt-4'>
                     <button
