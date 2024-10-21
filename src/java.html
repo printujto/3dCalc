@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="cs">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Nezávazná poptávka na 3D tisk</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background-color: #ffffff;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+            }
+            h1 {
+                color: #4b4b4b;
+                text-align: center;
+                font-size: 2em;
+                margin: 20px 0;
+            }
+            form {
+                background: #f9f9f9;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+                max-width: 900px;
+                margin: 20px auto;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .form-section {
+                width: 100%;
+            }
+            .form-section h2 {
+                font-size: 1.8em;
+                color: #007bff;
+                border-bottom: 2px solid #d95d20;
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: bold;
+                font-size: 1em;
+                color: #4b4b4b;
+            }
+            input[type='file'],
+            select,
+            input[type='number'],
+            input[type='text'],
+            input[type='email'],
+            input[type='tel'] {
+                width: 100%;
+                padding: 6px;
+                margin-bottom: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                box-sizing: border-box;
+                font-size: 1em;
+                transition: all 0.3s ease;
+            }
+            input:focus,
+            select:focus {
+                border-color: #007bff;
+                outline: none;
+            }
+            button {
+                background-color: #d95d20;
+                color: #fff;
+                padding: 6px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                width: 100%;
+                font-size: 1.3em;
+                transition: background-color 0.3s ease;
+                border: 2px solid #d95d20;
+            }
+            button:hover {
+                background-color: #d95d20;
+            }
+            #result {
+                width: 100%;
+                margin-top: 20px;
+                font-size: 1.2em;
+                color: #4b4b4b;
+                text-align: center;
+            }
+            #result span {
+                font-size: 1.2em;
+                color: #000;
+                font-weight: bold;
+            }
+            #minPriceAgree {
+                margin-top: 15px;
+                text-align: center;
+                display: none;
+            }
+            .order-section {
+                opacity: 0.5;
+                transition: opacity 0.3s ease;
+            }
+            .order-section input,
+            .order-section select,
+            .order-section button {
+                pointer-events: none;
+            }
+            .success-message {
+                font-size: 1.5em;
+                color: green;
+                margin-left: 10px;
+                display: inline-block;
+                vertical-align: middle;
+            }
+        </style>
+    </head>
+    <body>
+        <form id="stlForm" enctype="multipart/form-data" method="post">
+            <div class="form-section input-section">
+                <h2 style="color: #4b4b4b">Online kalkulátor ceny</h2>
+                <label for="material">Vyberte materiál:</label>
+                <select id="material" name="material" required>
+                    <option value="PLA">PLA</option>
+                    <option value="PETG">PETG</option>
+                    <option value="ABS">ABS</option>
+                    <option value="ASA">ASA</option>
+                    <option value="PC">PC</option>
+                    <option value="TPU">TPU</option>
+                </select>
+                <label for="strength">Vyberte pevnost výtisku:</label>
+                <select id="strength" name="strength" required>
+                    <option value="standard">Standardní</option>
+                    <option value="high">Vysoká</option>
+                    <option value="extra_high">Extra vysoká</option>
+                </select>
+                <label for="print_quality">Vyberte kvalitu výtisku:</label>
+                <select id="print_quality" name="print_quality" required>
+                    <option value="no_quality">Nezáleží na kvalitě</option>
+                    <option value="standard_quality">Standardní kvalita</option>
+                    <option value="best_quality">Nejlepší kvalita</option>
+                </select>
+                <label for="quantity">Počet kusů:</label>
+                <input
+                    type="number"
+                    id="quantity"
+                    name="quantity"
+                    min="1"
+                    value="1"
+                    required
+                />
+                <label for="file">Vyberte STL soubor:</label>
+                <input
+                    type="file"
+                    id="file"
+                    name="file"
+                    accept=".stl"
+                    required
+                />
+                <p><b>Minimální cena objednávky je 200 Kč</b>.</p>
+                <button
+                    type="button"
+                    id="calculateButton"
+                    style="
+                        background-color: #d95d20;
+                        color: #ffffff;
+                        border: 2px solid #d95d20;
+                    "
+                >
+                    Vypočítat cenu
+                </button>
+                <div id="result" class="result-container"></div>
+                <div id="minPriceAgree">
+                    <label>
+                        <input type="checkbox" id="agreeMinPrice" /> Souhlasím s
+                        minimální cenou 200 Kč
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section order-section">
+                <h2 style="color: #4b4b4b">Objednávkové informace</h2>
+                <label for="name">Jméno a příjmení:</label>
+                <input type="text" id="name" name="name" disabled />
+                <label for="street">Ulice a ČP:</label>
+                <input type="text" id="street" name="street" disabled />
+                <label for="phone">Telefonní číslo:</label>
+                <input type="tel" id="phone" name="phone" disabled />
+                <label for="city">Město:</label>
+                <input type="text" id="city" name="city" disabled />
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" disabled />
+                <label for="postal_code">PSČ:</label>
+                <input
+                    type="text"
+                    id="postal_code"
+                    name="postal_code"
+                    disabled
+                />
+                <label for="shipping">Vyberte dopravu:</label>
+                <select id="shipping" name="shipping" disabled>
+                    <option value="ppl">PPL (+69kč)</option>
+                    <option value="dpd">DPD (+105kč)</option>
+                    <option value="ceska_posta">Česká pošta (+80kč)</option>
+                    <option value="zasilkovna">Zásilkovna (+79kč)</option>
+                </select>
+                <label for="additional_info">Doplňující informace:</label>
+                <textarea
+                    id="additional_info"
+                    name="additional_info"
+                    rows="3"
+                    style="
+                        width: 100%;
+                        padding: 10px;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        font-size: 1em;
+                    "
+                    disabled
+                ></textarea>
+                <label>
+                    <input type="checkbox" id="terms" name="terms" disabled />
+                    Souhlasím s <a href="#">obchodními podmínkami</a>
+                </label>
+                <div style="display: flex; align-items: center">
+                    <button
+                        type="submit"
+                        id="submitOrder"
+                        style="
+                            background-color: #d95d20;
+                            color: #ffffff;
+                            border: 2px solid #d95d20;
+                        "
+                        disabled
+                    >
+                        Odeslat poptávku
+                    </button>
+                    <span
+                        id="successMessage"
+                        class="success-message"
+                        style="display: none"
+                        >Poptávka byla úspěšně odeslána.</span
+                    >
+                </div>
+            </div>
+        </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('stlForm')
+                const resultDiv = document.getElementById('result')
+                const minPriceAgreeDiv =
+                    document.getElementById('minPriceAgree')
+                const agreeMinPriceCheckbox =
+                    document.getElementById('agreeMinPrice')
+                const orderSection = document.querySelector('.order-section')
+                const calculateButton =
+                    document.getElementById('calculateButton')
+                const submitOrderButton = document.getElementById('submitOrder')
+                const successMessage = document.getElementById('successMessage')
+
+                function deactivateOrderSection() {
+                    orderSection.style.opacity = '0.5'
+                    orderSection
+                        .querySelectorAll('input, select, textarea, button')
+                        .forEach((el) => {
+                            el.disabled = true // Nastaví disabled na všechna pole
+                            el.style.pointerEvents = 'none' // Zamezí interakci
+                        })
+                }
+
+                function activateOrderSection() {
+                    orderSection.style.opacity = '1'
+                    orderSection
+                        .querySelectorAll('input, select, textarea, button')
+                        .forEach((el) => {
+                            el.disabled = false // Odstraní disabled ze všech polí
+                            el.style.pointerEvents = 'auto' // Umožní interakci
+                        })
+                }
+
+                deactivateOrderSection()
+
+                calculateButton.onclick = async function (event) {
+                    event.preventDefault()
+                    resultDiv.innerHTML =
+                        'Počkejte prosím, zpracováváme váš soubor...'
+
+                    const formData = new FormData(form)
+
+                    try {
+                        const response = await fetch(
+                            'https://www.printujto.eu/wp-content/custom-scripts/analyze_stl.php',
+                            {
+                                method: 'POST',
+                                body: formData,
+                            }
+                        )
+                        const data = await response.json()
+
+                        // Zpracování JSON odpovědi a zobrazení v HTML
+                        if (data.error) {
+                            resultDiv.innerHTML = `<span style="color: red;">Chyba: ${data.error}</span>`
+                            deactivateOrderSection()
+                        } else {
+                            resultDiv.innerHTML = `Odhadovaná cena tisku: <span>${data.price.toFixed(
+                                2
+                            )} Kč</span>`
+                            resultDiv.style.display = 'block'
+
+                            if (data.price < 200) {
+                                minPriceAgreeDiv.style.display = 'block'
+                                agreeMinPriceCheckbox.checked = false // Resetování checkboxu
+                                agreeMinPriceCheckbox.addEventListener(
+                                    'change',
+                                    function () {
+                                        if (agreeMinPriceCheckbox.checked) {
+                                            resultDiv.innerHTML = `Cena tisku upravena na 200 Kč.`
+                                            activateOrderSection() // Aktivuje objednávkovou sekci po souhlasu
+                                        } else {
+                                            deactivateOrderSection()
+                                        }
+                                    }
+                                )
+                            } else {
+                                minPriceAgreeDiv.style.display = 'none' // Skryje checkbox, pokud cena překročí 200 Kč
+                                activateOrderSection() // Aktivuje objednávkovou sekci
+                            }
+                        }
+                    } catch (error) {
+                        resultDiv.innerHTML = `<span style="color: red;">Chyba při komunikaci se serverem: ${error.message}</span>`
+                        deactivateOrderSection()
+                    }
+                }
+
+                submitOrderButton.onclick = async function (event) {
+                    event.preventDefault() // Zamezíme odeslání formuláře
+
+                    const formData = new FormData(form)
+
+                    try {
+                        const response = await fetch(
+                            'https://www.printujto.eu/wp-content/custom-scripts/analyze_stl.php',
+                            {
+                                method: 'POST',
+                                body: formData,
+                            }
+                        )
+                        const data = await response.json()
+
+                        if (data.message) {
+                            successMessage.style.display = 'inline-block'
+                            form.reset() // Vyresetuje formulář
+                            deactivateOrderSection() // Resetuje objednávkovou sekci do výchozího stavu
+                            resultDiv.innerHTML = '' // Vymaže zobrazenou cenu
+                            minPriceAgreeDiv.style.display = 'none' // Skryje checkbox po odeslání
+                        } else {
+                            resultDiv.innerHTML = `<span style="color: red;">Došlo k chybě při odesílání poptávky.</span>`
+                        }
+                    } catch (error) {
+                        resultDiv.innerHTML = `<span style="color: red;">Chyba při odesílání poptávky: ${error.message}</span>`
+                    }
+                }
+            })
+        </script>
+    </body>
+</html>
