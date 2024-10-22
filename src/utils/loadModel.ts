@@ -39,29 +39,10 @@ export function loadSTLModel(data) {
     const { width, height, depth } = calculateObjectDimensions(geometry)
     const dimensions = { x: width, y: height, z: depth }
 
-    const scaledGeometry = scaleGeometry(geometry, 0.45)
-
-    const { totalVolume: innerVolume } = calculateExactVolume(scaledGeometry)
-    const shellVolume = totalVolume - innerVolume
-    console.log(totalVolume)
-    console.log(innerVolume)
-
-    console.log(shellVolume)
-
     return { totalVolume, surfaceArea, dimensions }
 }
-
-// export function loadSTEPModel(data) {
-//     const stepLoader = new STEPLoader()
-//     const object = stepLoader.parse(data)
-
-//     object.traverse((child) => {
-//         if (child.isMesh && child.geometry) {
-//             const { totalVolume } = calculateExactVolume(child.geometry)
-//             console.log('Objem STEP objektu:', totalVolume, 'cm³')
-//         }
-//     })
-// }
+//TODO: jsem schopen vypcitat gramaze.. jeste check stejnou logikou vice procent
+//TODO: logika: z povrchu vynasobit 0.9 - 2 perim... tento objem pote odecist od celku, obe cisla vynasobit materialem 1.24 a mam gramy
 
 function calculateExactVolume(geometry) {
     let totalVolume = 0
@@ -173,27 +154,109 @@ function calculateObjectDimensions(geometry) {
     return { width, height, depth } // Vrátíme rozměry v cm
 }
 
-function scaleGeometry(geometry, wallThickness) {
-    // Clone the original geometry to avoid modifying it
-    const scaledGeometry = geometry.clone()
+// function scaleGeometry(geometry, wallThickness) {
+//     // Clone the original geometry to avoid modifying it
+//     const scaledGeometry = geometry.clone()
 
-    // Calculate the bounding box for geometry
-    geometry.computeBoundingBox()
-    const boundingBox = geometry.boundingBox
+//     // Calculate the bounding box for geometry
+//     geometry.computeBoundingBox()
+//     const boundingBox = geometry.boundingBox
 
-    // Get the size of the object (bounding box dimensions)
-    const size = new THREE.Vector3()
-    boundingBox.getSize(size)
+//     // Get the size of the object (bounding box dimensions)
+//     const size = new THREE.Vector3()
+//     boundingBox.getSize(size)
 
-    // Ensure that the wall thickness is less than half of any dimension to avoid invalid scaling
-    const scaleX = Math.max(1 - wallThickness / size.x, 0.01)
-    const scaleY = Math.max(1 - wallThickness / size.y, 0.01)
-    const scaleZ = Math.max(1 - wallThickness / size.z, 0.01)
-    console.log(scaleX)
-    console.log(scaleY)
+//     // Ensure that the wall thickness is less than half of any dimension to avoid invalid scaling
+//     const scaleX = Math.max(1 - wallThickness / size.x, 0.01)
+//     const scaleY = Math.max(1 - wallThickness / size.y, 0.01)
+//     const scaleZ = Math.max(1 - wallThickness / size.z, 0.01)
+//     console.log(scaleX)
+//     console.log(scaleY)
 
-    // Scale the geometry towards its center
-    scaledGeometry.scale(scaleX, scaleY, scaleZ)
+//     // Scale the geometry towards its center
+//     scaledGeometry.scale(scaleX, scaleY, scaleZ)
 
-    return scaledGeometry
-}
+//     return scaledGeometry
+// }
+
+// function calculateFaceNormals(geometry) {
+//     const positions = geometry.attributes.position.array
+//     const normals = []
+//     const vectorA = new THREE.Vector3()
+//     const vectorB = new THREE.Vector3()
+//     const vectorC = new THREE.Vector3()
+//     const normal = new THREE.Vector3()
+
+//     for (let i = 0; i < positions.length; i += 9) {
+//         vectorA.set(positions[i], positions[i + 1], positions[i + 2])
+//         vectorB.set(positions[i + 3], positions[i + 4], positions[i + 5])
+//         vectorC.set(positions[i + 6], positions[i + 7], positions[i + 8])
+
+//         // Vytvoříme vektory mezi vrcholy
+//         const edge1 = vectorB.clone().sub(vectorA)
+//         const edge2 = vectorC.clone().sub(vectorA)
+
+//         // Vektorový součin vektorů tvoří normálu
+//         normal.crossVectors(edge1, edge2).normalize()
+
+//         normals.push(normal.clone())
+//     }
+//     return normals
+// }
+
+// function offsetGeometry(geometry, wallThickness) {
+//     const positions = geometry.attributes.position.array
+//     const normals = calculateFaceNormals(geometry)
+
+//     const newPositions = []
+//     const vectorA = new THREE.Vector3()
+//     const vectorB = new THREE.Vector3()
+//     const vectorC = new THREE.Vector3()
+
+//     for (let i = 0; i < positions.length; i += 9) {
+//         // Získání tří vrcholů trojúhelníku
+//         vectorA.set(positions[i], positions[i + 1], positions[i + 2])
+//         vectorB.set(positions[i + 3], positions[i + 4], positions[i + 5])
+//         vectorC.set(positions[i + 6], positions[i + 7], positions[i + 8])
+
+//         const normal = normals[Math.floor(i / 9)] // Normála pro tento trojúhelník
+
+//         // Posunutí vrcholů podél normály
+//         vectorA.addScaledVector(normal, -wallThickness)
+//         vectorB.addScaledVector(normal, -wallThickness)
+//         vectorC.addScaledVector(normal, -wallThickness)
+
+//         // Přidání nových vrcholů do nové geometrie
+//         newPositions.push(vectorA.x, vectorA.y, vectorA.z)
+//         newPositions.push(vectorB.x, vectorB.y, vectorB.z)
+//         newPositions.push(vectorC.x, vectorC.y, vectorC.z)
+//     }
+
+//     // Vytvoříme novou BufferGeometry s offsetovanými vrcholy
+//     const newGeometry = new THREE.BufferGeometry()
+//     newGeometry.setAttribute(
+//         'position',
+//         new THREE.Float32BufferAttribute(newPositions, 3)
+//     )
+
+//     return newGeometry
+// }
+
+// function calculateShellVolume(geometry, wallThickness) {
+//     // Výpočet původního objemu
+//     const { totalVolume: outerVolume } = calculateExactVolume(geometry)
+
+//     // Offsetování pro vnitřní plochu
+//     const innerGeometry = offsetGeometry(geometry, wallThickness)
+//     console.log('//////')
+
+//     console.log(outerVolume)
+
+//     // Výpočet objemu vnitřní plochy
+//     const { totalVolume: innerVolume } = calculateExactVolume(innerGeometry)
+//     console.log(innerVolume)
+
+//     // Objem skořepiny = rozdíl mezi původním a vnitřním objemem
+//     const shellVolume = outerVolume - innerVolume
+//     return shellVolume
+// }
