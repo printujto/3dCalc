@@ -41,7 +41,7 @@ export function loadSTLModel(data) {
 
     return { totalVolume, surfaceArea, dimensions }
 }
-//TODO: jsem schopen vypcitat gramaze.. jeste check stejnou logikou vice procent
+
 //TODO: logika: z povrchu vynasobit 0.9 - 2 perim... tento objem pote odecist od celku, obe cisla vynasobit materialem 1.24 a mam gramy
 
 function calculateExactVolume(geometry) {

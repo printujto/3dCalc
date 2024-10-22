@@ -1,12 +1,11 @@
 import ModelCard from '../ModelCard'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { loadOBJModel, loadSTLModel } from '../../utils/loadModel'
 import getPrice from '../../utils/getPrice'
-import { SelectItem, Select, Input, Button } from '@nextui-org/react'
+import { SelectItem, Select, Input, Button, Textarea } from '@nextui-org/react'
 import emailjs from '@emailjs/browser'
 import toast from 'react-hot-toast'
 import axios from 'axios'
-import FinalSegmentForm from './FinalSegmentForm'
 
 type modelParams = {
     volume: number
@@ -14,8 +13,13 @@ type modelParams = {
     dimensions: { x: number; y: number; z: number }
 }
 
-const FormWithModel = () => {
+const FormWithModel = ({
+    handleSendSuccess,
+}: {
+    handleSendSuccess: (state: boolean) => void
+}) => {
     const [finalSegment, setFinalSegment] = useState(false)
+    const [noCountMode, setNoCountMode] = useState(false)
     const [formErr, setFormErr] = useState('')
     const [model, setModel] = useState<File>()
 
@@ -26,35 +30,41 @@ const FormWithModel = () => {
     const [surfaceQuality, setSurfaceQuality] = useState('rough')
 
     const [modelColor, setModelColor] = useState('black')
+    const [customColor, setCustomColor] = useState('')
     const [enviroment, setEnviroment] = useState('in')
-    const [count, setCount] = useState(0)
+    const [count, setCount] = useState(1)
 
     const [orderPrice, setOrderPrice] = useState(0)
     const [agreeMinPrice, setAgreeMinPrice] = useState(true)
     const [modelWeight, setModelWeight] = useState(0)
 
-    // console.log(modelQuality)
-    // console.log(surfaceQuality)
-    // console.log(material)
-    // console.log(enviroment)
-    // console.log('Count:' + count)
-    // console.log(modelParams)
+    //UserInfo
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
+    const [phone, setPhone] = useState('')
+    const [email, setEmail] = useState('')
+    const [street, setStreet] = useState('')
+    const [city, setCity] = useState('')
+    const [zipCode, setZipCode] = useState('')
+    const [note, setNote] = useState('')
+
+    useEffect(() => {
+        showResult()
+    }, [modelQuality, material, surfaceQuality, modelParams, count, model])
 
     const showResult = async () => {
         if (!model) {
-            console.log('nebyl zadan objekt')
             setFormErr('Nahrajte 3d objekt')
         } else if (
             !modelQuality ||
             !enviroment ||
             !surfaceQuality ||
             !material ||
-            !modelColor
+            !modelColor ||
+            (modelColor === 'other' && customColor === '')
         ) {
-            console.log('chybicka')
             setFormErr('Vyplňte všechny povinné údaje')
         } else if (count <= 0) {
-            console.log('Zadej pocet')
             setFormErr('Zadejte počet kusů')
         } else {
             setFormErr('')
@@ -70,17 +80,18 @@ const FormWithModel = () => {
                 material,
             })
             if (!modelParams) return
-            console.log(result)
+
             if (!result) return
 
-            setOrderPrice(Math.floor(result?.priceAfterQualityCheck))
-            setModelWeight(Math.round(result.totalWeight * 100) / 100)
+            setOrderPrice(result?.priceAfterQualityCheck * count)
+            setModelWeight(result.totalWeightRound)
 
             // const weight = getPrice(modelParams, material, inFill)
         }
     }
 
     const getModelParams = (model: File) => {
+        setNoCountMode(false)
         return new Promise((resolve, reject) => {
             if (!model) return reject('No model provided')
 
@@ -94,6 +105,8 @@ const FormWithModel = () => {
             } else if (extension === 'stl') {
                 reader.readAsArrayBuffer(model)
             } else {
+                setNoCountMode(true)
+                setFormErr('Lze počítat jen s formáty .obj a .stl')
                 return reject('Nepodporovaný formát')
             }
 
@@ -122,12 +135,14 @@ const FormWithModel = () => {
                         surface = surfaceArea
                         dimensions = objDimensions
                     } else {
+                        setNoCountMode(true)
+                        setFormErr('Lze počítat jen s formáty .obj a .stl')
                         return reject('Nepodporovaný formát')
                     }
 
                     // Resolve the promise with the calculated values
                     resolve({ volume, surface, dimensions })
-                } catch (error) {
+                } catch (err) {
                     reject('Error processing the model')
                 }
             }
@@ -139,43 +154,104 @@ const FormWithModel = () => {
     }
 
     //TODO: nejdrive vyresit nacenovani a pak odesilani formulare se vsemi daty
-    const sendOrder = async () => {
-        //TODO: tady jeste jedno overovani, jestli jsou vsechny potrebne data zadane a posilas
+    const sendOrder: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
+        e.preventDefault()
 
-        if (model) {
+        if (!model) {
+            setFormErr('Nahrajte 3d objekt')
+        } else if (
+            !modelQuality ||
+            !enviroment ||
+            !surfaceQuality ||
+            !material ||
+            !modelColor ||
+            (modelColor === 'other' && customColor === '') ||
+            !firstName ||
+            !lastName ||
+            !phone ||
+            !email ||
+            !street ||
+            !city ||
+            !zipCode
+        ) {
+            setFormErr('Vyplňte všechny povinné údaje')
+        } else if (count <= 0) {
+            setFormErr('Zadejte počet kusů')
+        } else if (orderPrice < 200 && !agreeMinPrice) {
+            setFormErr('Minimální cena 200 Kč musí být odsouhlasena')
+        } else {
+            setFormErr('')
+
+            const customFileName =
+                model.name.split('.')[0] + '_' + firstName + '_' + lastName
+
             const uploadData = new FormData()
             uploadData.append('upload_preset', 'file_upload_preset')
-            uploadData.append('public_id', model.name.split('.')[0])
+            uploadData.append('public_id', customFileName)
             uploadData.append('file', model)
             // uploadData.append('from_name', 'Pavel novotny')
+            const cldUrl = import.meta.env.VITE_CLOUDINARY_URL
 
             try {
-                const result = await axios.post(
-                    'https://api.cloudinary.com/v1_1/dlhgypwnv/raw/upload', // správná adresa pro soubory
-                    uploadData
-                )
+                if (!cldUrl) return
+
+                const result = await axios.post(cldUrl, uploadData)
 
                 const formData = {
-                    from_user: 'Test user',
-                    message: 'Zprava od uzivatele',
-                    modelUrl: result.data.secure_url,
+                    firstName: firstName,
+                    lastName: lastName,
+                    phone: phone,
+                    email: email,
+                    street: street,
+                    city: city,
+                    zipcode: zipCode,
+                    note: note,
+
+                    modelQuality: modelQuality,
+                    enviroment:
+                        (enviroment === 'in' && 'Interiér') ||
+                        (enviroment === 'ext' && 'Exteriér') ||
+                        (enviroment === 'sun' && 'Na přímém slunci'),
+                    surfaceQuality:
+                        (surfaceQuality === 'rough' && 'Hrubá') ||
+                        (surfaceQuality === 'standard' && 'Standardní') ||
+                        (surfaceQuality === 'soft' && 'Jemná'),
+                    material: material,
+                    modelColor:
+                        modelColor === 'other' ? customColor : modelColor,
+
+                    modelWeight: modelWeight,
+                    modelDimensionX: modelParams?.dimensions.x,
+                    modelDimensionY: modelParams?.dimensions.y,
+                    modelDimensionZ: modelParams?.dimensions.z,
+
+                    count: count,
+                    orderPrice: orderPrice,
+
+                    modelUrl: result.data.CLOUDINARY_URL,
                 }
+
+                const emailjsServiceID = import.meta.env.VITE_EMAILJS_SERVICE_ID
+                const emailjsTemplateID = import.meta.env
+                    .VITE_EMAILJS_TEMPLATE_ID
+                const emailjsSecret = import.meta.env.VITE_EMAILJS_SECRET
+
+                if (!emailjsServiceID || !emailjsTemplateID || !emailjsSecret)
+                    return
 
                 const sendPromise = emailjs
                     .send(
                         'service_9itde3s',
-                        'template_mef5ebc',
+                        emailjsTemplateID,
                         formData,
-                        'wZ-guyfVuBq-M1VSk'
+                        emailjsSecret
                     )
                     .then(
                         () => {
-                            console.log('SUCCESS!')
+                            handleSendSuccess(true)
                         },
                         (error) => {
-                            console.log(error)
-
-                            console.log('FAILED...', error.text)
+                            setFormErr('Někde nastala chyba')
                         }
                     )
 
@@ -189,8 +265,6 @@ const FormWithModel = () => {
                     console.log(error)
                 }
             }
-        } else {
-            console.log('neni model')
         }
     }
 
@@ -341,7 +415,6 @@ const FormWithModel = () => {
                                     setSurfaceQuality(e.target.value)
                                 }}
                             >
-                                {}
                                 <SelectItem key={'rough'}>{'Hrubá'}</SelectItem>
                                 <SelectItem key={'standart'}>
                                     {'Standardní'}
@@ -400,9 +473,15 @@ const FormWithModel = () => {
 
                             {modelColor === 'other' && (
                                 <Input
+                                    onChange={(e) =>
+                                        setCustomColor(e.target.value)
+                                    }
                                     classNames={{
-                                        inputWrapper:
-                                            'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                        inputWrapper: `${
+                                            customColor === ''
+                                                ? 'bg-red-200 data-[hover=true]:bg-red-300 data-[focus=true]:!bg-red-300'
+                                                : 'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300'
+                                        }`,
                                     }}
                                     type='text'
                                     label='Zadejte barvu'
@@ -418,8 +497,8 @@ const FormWithModel = () => {
                         type='number'
                         min={1}
                         max={500}
-                        placeholder='0'
                         label='Zadejte počet kusů'
+                        defaultValue={count.toString()}
                         onChange={(e) => setCount(+e.target.value)}
                     />
 
@@ -431,22 +510,23 @@ const FormWithModel = () => {
                         )}
                     </div>
 
-                    <div className='flex flex-col gap-2 '>
+                    {/* <div className='flex flex-col gap-2 '>
                         <Button
                             onClick={showResult}
                             className='bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
                         >
                             Vypočítat cenu
                         </Button>
-                    </div>
+                    </div> */}
+                </section>
 
+                {!noCountMode && (
                     <section className='mt-2 text-right'>
-                        <p>Váha modelu: {modelWeight} g</p>
                         <h2 className='text-md'>
                             Celková cena:{' '}
                             <span className='text-2xl'>{orderPrice} Kč</span>
                         </h2>
-                        <p className='text-md'>vč. DPH</p>
+
                         {orderPrice < 200 && (
                             <div>
                                 <p className='text-red-500 text-md'>
@@ -473,15 +553,157 @@ const FormWithModel = () => {
                                 </div>
                             </div>
                         )}
+                    </section>
+                )}
+
+                <section className={finalSegment ? 'text-left' : 'flex'}>
+                    <Button
+                        onClick={() => {
+                            if (!model) {
+                                console.log('nebyl zadan objekt')
+                                setFormErr('Nahrajte 3d objekt')
+                            } else if (
+                                !modelQuality ||
+                                !enviroment ||
+                                !surfaceQuality ||
+                                !material ||
+                                !modelColor ||
+                                (modelColor === 'other' && customColor === '')
+                            ) {
+                                setFormErr('Vyplňte všechny povinné údaje')
+                            } else if (count <= 0) {
+                                setFormErr('Zadejte počet kusů')
+                            } else if (orderPrice < 200 && !agreeMinPrice) {
+                                setFormErr(
+                                    'Minimální cena 200 Kč musí být odsouhlasena'
+                                )
+                            } else {
+                                setFormErr('')
+                                setFinalSegment((prev) => !prev)
+                            }
+                        }}
+                        className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
+                    >
+                        {finalSegment ? (
+                            <span>Jít zpět</span>
+                        ) : (
+                            <span>Přejít na objednávku</span>
+                        )}
+                    </Button>
+                </section>
+
+                {finalSegment && (
+                    <section className='flex flex-col gap-2 mt-4'>
+                        <p>Kontaktní údaje:</p>
+                        <section className='flex gap-2'>
+                            <Input
+                                isRequired
+                                className='w-full'
+                                classNames={{
+                                    inputWrapper:
+                                        'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                }}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                type='text'
+                                label='Křestní jméno'
+                            />
+                            <Input
+                                isRequired
+                                className='w-full'
+                                classNames={{
+                                    inputWrapper:
+                                        'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                }}
+                                onChange={(e) => setLastName(e.target.value)}
+                                type='text'
+                                label='Přijmení'
+                            />
+                        </section>
+
+                        <Input
+                            isRequired
+                            className='w-full'
+                            classNames={{
+                                inputWrapper:
+                                    'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                            }}
+                            onChange={(e) => setEmail(e.target.value)}
+                            type='text'
+                            label='email'
+                        />
+                        <Input
+                            isRequired
+                            className='w-full'
+                            classNames={{
+                                inputWrapper:
+                                    'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                            }}
+                            onChange={(e) => setPhone(e.target.value)}
+                            type='text'
+                            label='telefon'
+                        />
+                        <p>Adresa:</p>
+                        <Input
+                            isRequired
+                            className='w-full'
+                            classNames={{
+                                inputWrapper:
+                                    'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                            }}
+                            onChange={(e) => setStreet(e.target.value)}
+                            type='text'
+                            label='Ulice'
+                        />
+                        <section className='flex gap-2'>
+                            <Input
+                                isRequired
+                                className='w-full'
+                                classNames={{
+                                    inputWrapper:
+                                        'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                }}
+                                onChange={(e) => setCity(e.target.value)}
+                                type='text'
+                                label='Město'
+                            />
+                            <Input
+                                isRequired
+                                className='w-full'
+                                classNames={{
+                                    inputWrapper:
+                                        'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                }}
+                                onChange={(e) => setZipCode(e.target.value)}
+                                type='text'
+                                label='PSČ'
+                            />
+                        </section>
+                        <Textarea
+                            label='Poznámka'
+                            placeholder='Zde můžete napsat dodatečné informace'
+                            classNames={{
+                                inputWrapper:
+                                    'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                            }}
+                            onChange={(e) => setNote(e.target.value)}
+                        />
+                        <div className='h-5'>
+                            {formErr.length > 0 && (
+                                <p className='text-sm text-red-500 text-right'>
+                                    {formErr}
+                                </p>
+                            )}
+                        </div>
+
                         <Button
-                            // onClick={sendOrder}
+                            onClick={(e) => sendOrder(e)}
+                            type='submit'
                             className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
                         >
-                            Přejít na objednávku
+                            Nezávazně objednat
                         </Button>
                     </section>
-                </section>
-                {finalSegment && <FinalSegmentForm></FinalSegmentForm>}
+                )}
             </form>
         </div>
     )

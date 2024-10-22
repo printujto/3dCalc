@@ -94,16 +94,18 @@ const getPrice = ({
     const totalWeight = totalVolume * materialDensity
     const price = totalWeight * materialPrice
 
-    const priceAfterQualityCheck = price + price * qualityPercentage
+    const priceAfterQualityCheck = Math.ceil(price + price * qualityPercentage)
 
     console.log(priceAfterQualityCheck)
+
+    const totalWeightRound = Math.round(totalWeight * 100) / 100
 
     // console.log('objectSurfaceWeight: ' + objectSurfaceWeight)
     // console.log('fillWeight: ' + fillWeight)
     console.log('totalweight: ' + totalWeight)
     console.log('price: ' + price)
 
-    return { totalWeight, priceAfterQualityCheck }
+    return { totalWeightRound, priceAfterQualityCheck }
 }
 
 export default getPrice

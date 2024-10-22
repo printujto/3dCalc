@@ -1,15 +1,4 @@
 import { useState } from 'react'
-import { loadOBJModel, loadSTLModel } from './utils/loadModel.js'
-import getPrice from './utils/getPrice.js'
-
-type modelParams = {
-    volume: string
-    dimensions: {
-        x: number
-        y: number
-        z: number
-    }
-}
 
 import './App.css'
 import FormWithModel from './components/forms/FormWithModel.js'
@@ -18,6 +7,17 @@ import { Toaster } from 'react-hot-toast'
 
 function App() {
     const [uploadModel, setUploadModel] = useState(true)
+    const [sendSuccess, setSendSuccess] = useState(false)
+
+    if (sendSuccess) {
+        return (
+            <main className='flex flex-col items-center'>
+                <div className='sm:w-1/2 lg:w-1/3 w-full'>
+                    <h1>Formulář úspěšně odeslán✅</h1>
+                </div>
+            </main>
+        )
+    }
 
     return (
         <main className='flex flex-col items-center'>
@@ -48,7 +48,9 @@ function App() {
                 </div>
 
                 {uploadModel ? (
-                    <FormWithModel></FormWithModel>
+                    <FormWithModel
+                        handleSendSuccess={(state) => setSendSuccess(state)}
+                    ></FormWithModel>
                 ) : (
                     <BasicForm></BasicForm>
                 )}
