@@ -31,6 +31,7 @@ const FormWithModel = () => {
 
     const [orderPrice, setOrderPrice] = useState(0)
     const [agreeMinPrice, setAgreeMinPrice] = useState(true)
+    const [modelWeight, setModelWeight] = useState(0)
 
     // console.log(modelQuality)
     // console.log(surfaceQuality)
@@ -47,7 +48,8 @@ const FormWithModel = () => {
             !modelQuality ||
             !enviroment ||
             !surfaceQuality ||
-            !material
+            !material ||
+            !modelColor
         ) {
             console.log('chybicka')
             setFormErr('Vyplňte všechny povinné údaje')
@@ -72,6 +74,7 @@ const FormWithModel = () => {
             if (!result) return
 
             setOrderPrice(Math.floor(result?.priceAfterQualityCheck))
+            setModelWeight(Math.round(result.totalWeight * 100) / 100)
 
             // const weight = getPrice(modelParams, material, inFill)
         }
@@ -438,6 +441,7 @@ const FormWithModel = () => {
                     </div>
 
                     <section className='mt-2 text-right'>
+                        <p>Váha modelu: {modelWeight} g</p>
                         <h2 className='text-md'>
                             Celková cena:{' '}
                             <span className='text-2xl'>{orderPrice} Kč</span>
