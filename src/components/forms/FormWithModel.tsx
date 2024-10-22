@@ -470,7 +470,7 @@ const FormWithModel = () => {
                             </div>
                         )}
                         <Button
-                            onClick={sendOrder}
+                            // onClick={sendOrder}
                             className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
                         >
                             Přejít na objednávku
