@@ -83,7 +83,7 @@ const FormWithModel = ({
 
             if (!result) return
 
-            setOrderPrice(result?.priceAfterQualityCheck * count)
+            setOrderPrice(result?.totalPrice * count)
             setModelWeight(result.totalWeightRound)
 
             // const weight = getPrice(modelParams, material, inFill)
@@ -197,6 +197,11 @@ const FormWithModel = ({
 
                 const result = await axios.post(cldUrl, uploadData)
 
+                const dimensionX = modelParams?.dimensions.x
+                console.log('sdfsdfxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+
+                console.log(dimensionX)
+
                 const formData = {
                     firstName: firstName,
                     lastName: lastName,
@@ -221,7 +226,7 @@ const FormWithModel = ({
                         modelColor === 'other' ? customColor : modelColor,
 
                     modelWeight: modelWeight,
-                    modelDimensionX: modelParams?.dimensions.x,
+                    modelDimensionX: dimensionX,
                     modelDimensionY: modelParams?.dimensions.y,
                     modelDimensionZ: modelParams?.dimensions.z,
 
@@ -522,6 +527,7 @@ const FormWithModel = ({
 
                 {!noCountMode && (
                     <section className='mt-2 text-right'>
+                        <p>Váha {modelWeight} g</p>
                         <h2 className='text-md'>
                             Celková cena:{' '}
                             <span className='text-2xl'>{orderPrice} Kč</span>

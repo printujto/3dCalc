@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <main>
+            <p>Ahoj,</p>
+            <p>
+                M&aacute;&scaron; novou zak&aacute;zku od {{firstName}}
+                {{lasttName}}
+            </p>
+
+            <h1>Informace o zákazníkovi</h1>
+            <h2>Obecné</h2>
+            <ul>
+                <li>Jméno: {{firstName}} {{lastName}}</li>
+                <li>Telefon: {{phone}}</li>
+                <li>Email: {{email}}</li>
+            </ul>
+            <h2>Adresa</h2>
+            <ul>
+                <li>Ulice: {{street}}</li>
+                <li>Město:{{city}}</li>
+                <li>PSČ: {{zipcode}}</li>
+            </ul>
+
+            <h1>Informace o objednávce</h1>
+
+            <ul>
+                <li>Kvalita:</li>
+                <li>Prostředí užívání:</li>
+                <li>Kvalita povrchu:</li>
+                <li>Materiál:</li>
+                <li>Barva:</li>
+                <li>Váha modelu: {{modelWeight}}</li>
+                <li>
+                    Rozměry (x,y,z): X: {{modelDimensionX}}, Y:
+                    {{modelDimensionY}}, Z: {{modelDimensionZ}}
+                </li>
+                <li>Počet výtisků: {{count}} ks</li>
+                <li>Vypočítaná cena: {{orderPrice}} Kč</li>
+
+                <li>Dodatečná poznámka: {{note}}</li>
+            </ul>
+
+            <a href="{{modelUrl}}">Odkaz pro stažení zadaného modelu</a>
+        </main>
+    </body>
+</html>

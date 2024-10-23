@@ -16,7 +16,7 @@ export function loadOBJModel(data) {
             totalVolume += volume
 
             const surfaceArea = calculateSurfaceArea(child.geometry)
-            totalSurfaceArea += surfaceArea
+            totalSurfaceArea += surfaceArea / 10
             const { width, height, depth } = calculateObjectDimensions(
                 child.geometry
             )
@@ -34,7 +34,7 @@ export function loadSTLModel(data) {
     // Přesný výpočet objemu
     const { totalVolume } = calculateExactVolume(geometry)
 
-    const surfaceArea = calculateSurfaceArea(geometry)
+    const surfaceArea = calculateSurfaceArea(geometry) / 10
 
     const { width, height, depth } = calculateObjectDimensions(geometry)
     const dimensions = { x: width, y: height, z: depth }

@@ -75,37 +75,46 @@ const getPrice = ({
     console.log(fillPercentage)
     console.log(perimeterCount)
 
+    let totalPrice
+    let totalWeightRound
     //Samotný výpočet
     console.log('////////////////////////////////')
 
-    const objectVolume = modelParams.volume
-    const objectSurfaceVolume = modelParams.surface * 0.045 * perimeterCount
-    console.log(modelParams.surface)
-    console.log(objectSurfaceVolume)
+    console.log(modelParams)
+    if (modelParams.dimensions.z < 0.15) {
+        console.log('mensi nez 1.5mm')
 
-    const fillVolume = (objectVolume - objectSurfaceVolume) * fillPercentage
-    console.log('////////////////////////////////')
-    console.log(objectSurfaceVolume)
+        const objectVolume = modelParams.volume
 
-    console.log(fillVolume)
+        const oneSideSurface = modelParams.surface / 2
 
-    const totalVolume = fillVolume + objectSurfaceVolume
+        const customObjectVolume = oneSideSurface * 0.45 * perimeterCount
 
-    const totalWeight = totalVolume * materialDensity
-    const price = totalWeight * materialPrice
+        console.log(objectVolume)
+        console.log(customObjectVolume)
 
-    const priceAfterQualityCheck = Math.ceil(price + price * qualityPercentage)
+        const totalWeight = customObjectVolume * materialDensity
+        const price = totalWeight * materialPrice
 
-    console.log(priceAfterQualityCheck)
+        totalPrice = Math.ceil(price + price * qualityPercentage)
+        totalWeightRound = Math.round(totalWeight * 100) / 100
+    } else {
+        const objectVolume = modelParams.volume
+        const objectSurfaceVolume = modelParams.surface * 0.45 * perimeterCount
 
-    const totalWeightRound = Math.round(totalWeight * 100) / 100
+        const fillVolume = (objectVolume - objectSurfaceVolume) * fillPercentage
 
-    // console.log('objectSurfaceWeight: ' + objectSurfaceWeight)
-    // console.log('fillWeight: ' + fillWeight)
-    console.log('totalweight: ' + totalWeight)
-    console.log('price: ' + price)
+        const totalVolume = fillVolume + objectSurfaceVolume
 
-    return { totalWeightRound, priceAfterQualityCheck }
+        const totalWeight = totalVolume * materialDensity
+        const price = totalWeight * materialPrice
+
+        totalPrice = Math.ceil(price + price * qualityPercentage)
+
+        totalWeightRound = Math.round(totalWeight * 100) / 100
+    }
+
+    return { totalWeightRound, totalPrice }
 }
 
 export default getPrice
