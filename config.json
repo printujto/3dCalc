@@ -4,6 +4,15 @@
         "standard": 0.05,
         "soft": 0.1
     },
+    "materialPrices": {
+        "PLA": 3,
+        "PETG": 3,
+        "ASA": 4,
+        "ABS": 4,
+        "PC": 7,
+        "TPU": 10
+    },
+
     "carriers": [
         {
             "name": "PPL",

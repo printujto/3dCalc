@@ -10,6 +10,14 @@ interface dataPreset {
         standard: number
         soft: number
     }
+    materialPrices: {
+        PLA: number
+        PETG: number
+        ASA: number
+        ABS: number
+        PC: number
+        TPU: number
+    }
     carriers: [
         {
             name: string
@@ -50,22 +58,22 @@ const getPrice = ({
 
     //Nastavení ceny za materiál a hustota materiálu
     if (material === 'PLA') {
-        materialPrice = 3
+        materialPrice = dataPreset.materialPrices.PLA
         materialDensity = 1.24
     } else if (material === 'PETG') {
-        materialPrice = 3
+        materialPrice = dataPreset.materialPrices.PETG
         materialDensity = 1.27
     } else if (material === 'ASA') {
-        materialPrice = 4
+        materialPrice = dataPreset.materialPrices.ASA
         materialDensity = 1.04
     } else if (material === 'ABS') {
-        materialPrice = 4
+        materialPrice = dataPreset.materialPrices.ABS
         materialDensity = 1.04
     } else if (material === 'PC') {
-        materialPrice = 7
+        materialPrice = dataPreset.materialPrices.PC
         materialDensity = 1.04
     } else if (material === 'TPU') {
-        materialPrice = 10
+        materialPrice = dataPreset.materialPrices.TPU
         materialDensity = 1.24
     }
     console.log(materialPrice)
@@ -104,16 +112,46 @@ const getPrice = ({
     //Samotný výpočet
 
     console.log(modelParams)
-    if (modelParams.dimensions.z < 0.15) {
+    if (modelParams.dimensions.x < 0.15) {
         console.log('mensi nez 1.5mm')
-
-        const objectVolume = modelParams.volume
 
         const oneSideSurface = modelParams.surface / 2
 
-        const customObjectVolume = oneSideSurface * 0.45 * perimeterCount
+        const customObjectVolume = oneSideSurface * modelParams.dimensions.x
 
-        console.log(objectVolume)
+        console.log(customObjectVolume)
+
+        const totalWeight = customObjectVolume * materialDensity
+        const price = totalWeight * materialPrice
+
+        totalPrice = Math.ceil(price + price * qualityPercentage) * count
+        totalWeightRound = Math.round(totalWeight * 100) / 100
+    } else if (modelParams.dimensions.y < 0.15) {
+        const oneSideSurface = modelParams.surface / 2
+
+        const customObjectVolume = oneSideSurface * modelParams.dimensions.y
+
+        const onesideSurface =
+            modelParams.dimensions.x * modelParams.dimensions.y
+
+        console.log(onesideSurface)
+
+        console.log(oneSideSurface * modelParams.dimensions.y)
+        console.log('.....................')
+
+        console.log(customObjectVolume)
+
+        const totalWeight = customObjectVolume * materialDensity
+        console.log(totalWeight)
+
+        const price = totalWeight * materialPrice
+
+        totalPrice = Math.ceil(price + price * qualityPercentage) * count
+        totalWeightRound = Math.round(totalWeight * 100) / 100
+    } else if (modelParams.dimensions.z < 0.15) {
+        const oneSideSurface = modelParams.surface / 2
+        const customObjectVolume = oneSideSurface * modelParams.dimensions.z
+
         console.log(customObjectVolume)
 
         const totalWeight = customObjectVolume * materialDensity

@@ -16,6 +16,14 @@ type dataPreset = {
         standard: number
         soft: number
     }
+    materialPrices: {
+        PLA: number
+        PETG: number
+        ASA: number
+        ABS: number
+        PC: number
+        TPU: number
+    }
     carriers: [
         {
             name: string
@@ -33,6 +41,7 @@ const FormWithModel = ({
     const [finalSegment, setFinalSegment] = useState(false)
     const [noCountMode, setNoCountMode] = useState(false)
     const [formErr, setFormErr] = useState('')
+    const [isSending, setIsSending] = useState(false)
     const [model, setModel] = useState<File>()
 
     const [modelDimensions, setModelDimensions] = useState<modelParams | null>(
@@ -197,7 +206,7 @@ const FormWithModel = ({
 
     const sendOrder: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
         e.preventDefault()
-
+        setIsSending(true)
         if (!model) {
             setFormErr('Nahrajte 3d objekt')
         } else if (
@@ -747,7 +756,11 @@ const FormWithModel = ({
                             type='submit'
                             className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
                         >
-                            Nezávazně objednat
+                            {isSending ? (
+                                <p>Odesílání</p>
+                            ) : (
+                                <p>Nezávazně objednat</p>
+                            )}
                         </Button>
                     </section>
                 )}
