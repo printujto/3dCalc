@@ -38,3 +38,9 @@ další věc je ta že ja musím mít nějak možnost proměné měnit v kalkula
 
 //CENY za matrose
 Ano bude se vše odvíjet od ceny za 1g materiálu tudíž pro zatím PLA= 3kc, petg = 3kc, ASA a ABS = 4kc, PC = 7kc, TPU= 10kc, potom kvalita standartní 0%, lepší kvalita 5% , a nejlepší 10% nahoru a to je vlastně asi vše veškeré tyto parametry budu pak upravovat v průběhu tohle je zatím z hlavy ale ceny se dost pravděpodobne upraví časem
+
+Co pujde ovlivnovat?
+
+1. procenta za kvalitu povrchu
+2.
+3. Dopravci a jejich ceny

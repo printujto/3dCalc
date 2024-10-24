@@ -21,6 +21,15 @@ export function loadOBJModel(data) {
                 child.geometry
             )
             dimensions = { x: width, y: height, z: depth }
+
+            const newGeometry = offsetGeometry(child.geometry, 2.7)
+
+            const { totalVolume: totalVolumee } =
+                calculateExactVolume(newGeometry)
+            //TODO:Zkusit spočítat jestli vychází hodnoty přesněji
+            //TODO:Implementovat výpočet když bude vycházet
+            console.log('NewGeo weight: ' + totalVolumee * 1.24)
+            console.log(totalVolumee)
         }
     })
 
@@ -38,6 +47,20 @@ export function loadSTLModel(data) {
 
     const { width, height, depth } = calculateObjectDimensions(geometry)
     const dimensions = { x: width, y: height, z: depth }
+
+    const newGeometry = offsetGeometry(geometry, 2.7)
+
+    const { totalVolume: totalVolumee } = calculateExactVolume(newGeometry)
+
+    console.log('NewGeo weight: ' + totalVolumee * 1.24)
+    console.log(totalVolumee)
+
+    const skorepina = totalVolume - totalVolumee
+    const vypln = (totalVolume - skorepina) * 0.7
+    console.log('Váha skorepiny= ' + skorepina * 1.24)
+    console.log('Váha výplně =' + vypln * 1.24)
+
+    console.log('opravena vaha= ' + (skorepina + vypln) * 1.24)
 
     return { totalVolume, surfaceArea, dimensions }
 }
@@ -154,93 +177,68 @@ function calculateObjectDimensions(geometry) {
     return { width, height, depth } // Vrátíme rozměry v cm
 }
 
-// function scaleGeometry(geometry, wallThickness) {
-//     // Clone the original geometry to avoid modifying it
-//     const scaledGeometry = geometry.clone()
+function calculateFaceNormals(geometry) {
+    const positions = geometry.attributes.position.array
+    const normals = []
+    const vectorA = new THREE.Vector3()
+    const vectorB = new THREE.Vector3()
+    const vectorC = new THREE.Vector3()
+    const normal = new THREE.Vector3()
 
-//     // Calculate the bounding box for geometry
-//     geometry.computeBoundingBox()
-//     const boundingBox = geometry.boundingBox
+    for (let i = 0; i < positions.length; i += 9) {
+        vectorA.set(positions[i], positions[i + 1], positions[i + 2])
+        vectorB.set(positions[i + 3], positions[i + 4], positions[i + 5])
+        vectorC.set(positions[i + 6], positions[i + 7], positions[i + 8])
 
-//     // Get the size of the object (bounding box dimensions)
-//     const size = new THREE.Vector3()
-//     boundingBox.getSize(size)
+        // Vytvoříme vektory mezi vrcholy
+        const edge1 = vectorB.clone().sub(vectorA)
+        const edge2 = vectorC.clone().sub(vectorA)
 
-//     // Ensure that the wall thickness is less than half of any dimension to avoid invalid scaling
-//     const scaleX = Math.max(1 - wallThickness / size.x, 0.01)
-//     const scaleY = Math.max(1 - wallThickness / size.y, 0.01)
-//     const scaleZ = Math.max(1 - wallThickness / size.z, 0.01)
-//     console.log(scaleX)
-//     console.log(scaleY)
+        // Vektorový součin vektorů tvoří normálu
+        normal.crossVectors(edge1, edge2).normalize()
 
-//     // Scale the geometry towards its center
-//     scaledGeometry.scale(scaleX, scaleY, scaleZ)
+        normals.push(normal.clone())
+    }
+    return normals
+}
 
-//     return scaledGeometry
-// }
+function offsetGeometry(geometry, wallThickness) {
+    const positions = geometry.attributes.position.array
+    const normals = calculateFaceNormals(geometry)
 
-// function calculateFaceNormals(geometry) {
-//     const positions = geometry.attributes.position.array
-//     const normals = []
-//     const vectorA = new THREE.Vector3()
-//     const vectorB = new THREE.Vector3()
-//     const vectorC = new THREE.Vector3()
-//     const normal = new THREE.Vector3()
+    const newPositions = []
+    const vectorA = new THREE.Vector3()
+    const vectorB = new THREE.Vector3()
+    const vectorC = new THREE.Vector3()
 
-//     for (let i = 0; i < positions.length; i += 9) {
-//         vectorA.set(positions[i], positions[i + 1], positions[i + 2])
-//         vectorB.set(positions[i + 3], positions[i + 4], positions[i + 5])
-//         vectorC.set(positions[i + 6], positions[i + 7], positions[i + 8])
+    for (let i = 0; i < positions.length; i += 9) {
+        // Získání tří vrcholů trojúhelníku
+        vectorA.set(positions[i], positions[i + 1], positions[i + 2])
+        vectorB.set(positions[i + 3], positions[i + 4], positions[i + 5])
+        vectorC.set(positions[i + 6], positions[i + 7], positions[i + 8])
 
-//         // Vytvoříme vektory mezi vrcholy
-//         const edge1 = vectorB.clone().sub(vectorA)
-//         const edge2 = vectorC.clone().sub(vectorA)
+        const normal = normals[Math.floor(i / 9)] // Normála pro tento trojúhelník
 
-//         // Vektorový součin vektorů tvoří normálu
-//         normal.crossVectors(edge1, edge2).normalize()
+        // Posunutí vrcholů podél normály
+        vectorA.addScaledVector(normal, -wallThickness)
+        vectorB.addScaledVector(normal, -wallThickness)
+        vectorC.addScaledVector(normal, -wallThickness)
 
-//         normals.push(normal.clone())
-//     }
-//     return normals
-// }
+        // Přidání nových vrcholů do nové geometrie
+        newPositions.push(vectorA.x, vectorA.y, vectorA.z)
+        newPositions.push(vectorB.x, vectorB.y, vectorB.z)
+        newPositions.push(vectorC.x, vectorC.y, vectorC.z)
+    }
 
-// function offsetGeometry(geometry, wallThickness) {
-//     const positions = geometry.attributes.position.array
-//     const normals = calculateFaceNormals(geometry)
+    // Vytvoříme novou BufferGeometry s offsetovanými vrcholy
+    const newGeometry = new THREE.BufferGeometry()
+    newGeometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(newPositions, 3)
+    )
 
-//     const newPositions = []
-//     const vectorA = new THREE.Vector3()
-//     const vectorB = new THREE.Vector3()
-//     const vectorC = new THREE.Vector3()
-
-//     for (let i = 0; i < positions.length; i += 9) {
-//         // Získání tří vrcholů trojúhelníku
-//         vectorA.set(positions[i], positions[i + 1], positions[i + 2])
-//         vectorB.set(positions[i + 3], positions[i + 4], positions[i + 5])
-//         vectorC.set(positions[i + 6], positions[i + 7], positions[i + 8])
-
-//         const normal = normals[Math.floor(i / 9)] // Normála pro tento trojúhelník
-
-//         // Posunutí vrcholů podél normály
-//         vectorA.addScaledVector(normal, -wallThickness)
-//         vectorB.addScaledVector(normal, -wallThickness)
-//         vectorC.addScaledVector(normal, -wallThickness)
-
-//         // Přidání nových vrcholů do nové geometrie
-//         newPositions.push(vectorA.x, vectorA.y, vectorA.z)
-//         newPositions.push(vectorB.x, vectorB.y, vectorB.z)
-//         newPositions.push(vectorC.x, vectorC.y, vectorC.z)
-//     }
-
-//     // Vytvoříme novou BufferGeometry s offsetovanými vrcholy
-//     const newGeometry = new THREE.BufferGeometry()
-//     newGeometry.setAttribute(
-//         'position',
-//         new THREE.Float32BufferAttribute(newPositions, 3)
-//     )
-
-//     return newGeometry
-// }
+    return newGeometry
+}
 
 // function calculateShellVolume(geometry, wallThickness) {
 //     // Výpočet původního objemu

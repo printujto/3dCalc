@@ -70,7 +70,7 @@ const getPrice = ({
         perimeterCount = 4
     } else if (modelQuality === 'high') {
         fillPercentage = 0.7
-        perimeterCount = 7
+        perimeterCount = 6
     }
     console.log(fillPercentage)
     console.log(perimeterCount)
@@ -102,11 +102,16 @@ const getPrice = ({
         const objectVolume = modelParams.volume
         const objectSurfaceVolume = modelParams.surface * 0.45 * perimeterCount
 
+        console.log('Surface volume: ' + objectSurfaceVolume)
+        console.log('Object 100 weight: ' + objectVolume * 1.24)
+
         const fillVolume = (objectVolume - objectSurfaceVolume) * fillPercentage
 
         const totalVolume = fillVolume + objectSurfaceVolume
 
         const totalWeight = totalVolume * materialDensity
+        console.log('Total W:' + totalWeight)
+
         const price = totalWeight * materialPrice
 
         totalPrice = Math.ceil(price + price * qualityPercentage)
