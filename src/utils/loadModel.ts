@@ -2,13 +2,14 @@ import * as THREE from 'three'
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js'
 import { STLLoader } from 'three/addons/loaders/STLLoader.js'
 
-export function loadOBJModel(data) {
+export function loadOBJModel(data: string) {
     const objLoader = new OBJLoader()
     const object = objLoader.parse(data)
 
     let totalVolume = 0
     let totalSurfaceArea = 0
     let dimensions = { x: 0, y: 0, z: 0 }
+    let innerVolume = 0
 
     object.traverse((child) => {
         if (child.isMesh && child.geometry) {
@@ -24,19 +25,21 @@ export function loadOBJModel(data) {
 
             const newGeometry = offsetGeometry(child.geometry, 2.7)
 
-            const { totalVolume: totalVolumee } =
+            const { totalVolume: innerObjVolume } =
                 calculateExactVolume(newGeometry)
+            innerVolume = innerObjVolume
             //TODO:Zkusit spočítat jestli vychází hodnoty přesněji
             //TODO:Implementovat výpočet když bude vycházet
-            console.log('NewGeo weight: ' + totalVolumee * 1.24)
-            console.log(totalVolumee)
+
+            // console.log('NewGeo weight: ' + totalVolumee * 1.24)
+            // console.log(totalVolumee)
         }
     })
 
-    return { totalVolume, totalSurfaceArea, dimensions }
+    return { totalVolume, totalSurfaceArea, dimensions, innerVolume }
 }
 
-export function loadSTLModel(data) {
+export function loadSTLModel(data: ArrayBuffer) {
     const stlLoader = new STLLoader()
     const geometry = stlLoader.parse(data)
 
@@ -48,26 +51,18 @@ export function loadSTLModel(data) {
     const { width, height, depth } = calculateObjectDimensions(geometry)
     const dimensions = { x: width, y: height, z: depth }
 
-    const newGeometry = offsetGeometry(geometry, 2.7)
+    const wallWidth = 0.45 * 7
 
-    const { totalVolume: totalVolumee } = calculateExactVolume(newGeometry)
+    const newGeometry = offsetGeometry(geometry, wallWidth)
 
-    console.log('NewGeo weight: ' + totalVolumee * 1.24)
-    console.log(totalVolumee)
+    const { totalVolume: innerVolume } = calculateExactVolume(newGeometry)
 
-    const skorepina = totalVolume - totalVolumee
-    const vypln = (totalVolume - skorepina) * 0.7
-    console.log('Váha skorepiny= ' + skorepina * 1.24)
-    console.log('Váha výplně =' + vypln * 1.24)
-
-    console.log('opravena vaha= ' + (skorepina + vypln) * 1.24)
-
-    return { totalVolume, surfaceArea, dimensions }
+    return { totalVolume, surfaceArea, dimensions, innerVolume }
 }
 
-//TODO: logika: z povrchu vynasobit 0.9 - 2 perim... tento objem pote odecist od celku, obe cisla vynasobit materialem 1.24 a mam gramy
-
-function calculateExactVolume(geometry) {
+function calculateExactVolume(
+    geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>
+) {
     let totalVolume = 0
 
     // Ujistíme se, že geometrie je ve formátu BufferGeometry
@@ -107,7 +102,9 @@ function signedVolumeOfTriangle(v1, v2, v3) {
     return v1.dot(v2.cross(v3)) / 6.0
 }
 
-function calculateSurfaceArea(geometry) {
+function calculateSurfaceArea(
+    geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>
+) {
     let totalSurfaceArea = 0
 
     // Ujistíme se, že geometrie je ve formátu BufferGeometry
@@ -155,7 +152,9 @@ function calculateSurfaceArea(geometry) {
     return totalSurfaceArea // Vracíme celkovou povrchovou plochu v cm²
 }
 
-function calculateObjectDimensions(geometry) {
+function calculateObjectDimensions(
+    geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>
+) {
     // Ujistíme se, že geometrie je ve formátu BufferGeometry
     const bufferGeometry = geometry.isBufferGeometry
         ? geometry
@@ -177,7 +176,9 @@ function calculateObjectDimensions(geometry) {
     return { width, height, depth } // Vrátíme rozměry v cm
 }
 
-function calculateFaceNormals(geometry) {
+function calculateFaceNormals(
+    geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>
+) {
     const positions = geometry.attributes.position.array
     const normals = []
     const vectorA = new THREE.Vector3()
@@ -202,7 +203,10 @@ function calculateFaceNormals(geometry) {
     return normals
 }
 
-function offsetGeometry(geometry, wallThickness) {
+function offsetGeometry(
+    geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>,
+    wallThickness: number
+) {
     const positions = geometry.attributes.position.array
     const normals = calculateFaceNormals(geometry)
 

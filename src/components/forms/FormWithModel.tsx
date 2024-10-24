@@ -8,8 +8,6 @@ import toast from 'react-hot-toast'
 import axios from 'axios'
 
 type modelParams = {
-    volume: number
-    surface: number
     dimensions: { x: number; y: number; z: number }
 }
 
@@ -23,7 +21,9 @@ const FormWithModel = ({
     const [formErr, setFormErr] = useState('')
     const [model, setModel] = useState<File>()
 
-    const [modelParams, setModelParams] = useState<modelParams | null>(null)
+    const [modelDimensions, setModelDimensions] = useState<modelParams | null>(
+        null
+    )
 
     const [material, setMaterial] = useState('PLA')
     const [modelQuality, setModelQuality] = useState('low')
@@ -50,7 +50,7 @@ const FormWithModel = ({
 
     useEffect(() => {
         showResult()
-    }, [modelQuality, material, surfaceQuality, modelParams, count, model])
+    }, [modelQuality, material, surfaceQuality, count, model])
 
     const showResult = async () => {
         if (!model) {
@@ -79,14 +79,13 @@ const FormWithModel = ({
                 surfaceQuality,
                 material,
             })
+
             if (!modelParams) return
 
             if (!result) return
 
             setOrderPrice(result?.totalPrice * count)
             setModelWeight(result.totalWeightRound)
-
-            // const weight = getPrice(modelParams, material, inFill)
         }
     }
 
@@ -95,7 +94,7 @@ const FormWithModel = ({
         return new Promise((resolve, reject) => {
             if (!model) return reject('No model provided')
 
-            let volume, surface, dimensions
+            let volume, surface, dimensions, innerVolume
 
             const reader = new FileReader()
             const extension = model.name.split('.').pop().toLowerCase()
@@ -119,21 +118,40 @@ const FormWithModel = ({
                             totalVolume,
                             totalSurfaceArea,
                             dimensions: objDimensions,
+                            innerVolume: inVolume,
                         } = loadOBJModel(e.target.result as string)
 
                         volume = totalVolume
                         surface = totalSurfaceArea
                         dimensions = objDimensions
+                        innerVolume = inVolume
+
+                        setModelDimensions({
+                            dimensions: {
+                                x: dimensions.x,
+                                y: dimensions.y,
+                                z: dimensions.z,
+                            },
+                        })
                     } else if (extension === 'stl') {
                         const {
                             totalVolume,
                             surfaceArea,
                             dimensions: objDimensions,
+                            innerVolume: inVolume,
                         } = loadSTLModel(e.target.result as ArrayBuffer)
 
                         volume = totalVolume
                         surface = surfaceArea
                         dimensions = objDimensions
+                        innerVolume = inVolume
+                        setModelDimensions({
+                            dimensions: {
+                                x: dimensions.x,
+                                y: dimensions.y,
+                                z: dimensions.z,
+                            },
+                        })
                     } else {
                         setNoCountMode(true)
                         setFormErr('Lze počítat jen s formáty .obj a .stl')
@@ -141,7 +159,7 @@ const FormWithModel = ({
                     }
 
                     // Resolve the promise with the calculated values
-                    resolve({ volume, surface, dimensions })
+                    resolve({ volume, surface, dimensions, innerVolume })
                 } catch (err) {
                     reject('Error processing the model')
                 }
@@ -153,7 +171,6 @@ const FormWithModel = ({
         })
     }
 
-    //TODO: nejdrive vyresit nacenovani a pak odesilani formulare se vsemi daty
     const sendOrder: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
         e.preventDefault()
 
@@ -188,19 +205,18 @@ const FormWithModel = ({
             const uploadData = new FormData()
             uploadData.append('upload_preset', 'file_upload_preset')
             uploadData.append('public_id', customFileName)
+            uploadData.append('folder', 'models')
             uploadData.append('file', model)
-            // uploadData.append('from_name', 'Pavel novotny')
-            const cldUrl = import.meta.env.VITE_CLOUDINARY_URL
 
+            const cldUrl =
+                'https://api.cloudinary.com/v1_1/dlhgypwnv/raw/upload'
             try {
                 if (!cldUrl) return
 
                 const result = await axios.post(cldUrl, uploadData)
+                console.log('URL')
 
-                const dimensionX = modelParams?.dimensions.x
-                console.log('sdfsdfxxxxxxxxxxxxxxxxxxxxxxxxxxx')
-
-                console.log(dimensionX)
+                console.log(result.data.secure_url)
 
                 const formData = {
                     firstName: firstName,
@@ -226,14 +242,17 @@ const FormWithModel = ({
                         modelColor === 'other' ? customColor : modelColor,
 
                     modelWeight: modelWeight,
-                    modelDimensionX: dimensionX,
-                    modelDimensionY: modelParams?.dimensions.y,
-                    modelDimensionZ: modelParams?.dimensions.z,
+                    modelDimensionX:
+                        Math.round(modelDimensions?.dimensions?.x * 100) / 100,
+                    modelDimensionY:
+                        Math.round(modelDimensions?.dimensions?.y * 100) / 100,
+                    modelDimensionZ:
+                        Math.round(modelDimensions?.dimensions?.z * 100) / 100,
 
                     count: count,
                     orderPrice: orderPrice,
 
-                    modelUrl: result.data.CLOUDINARY_URL,
+                    modelUrl: result.data.secure_url,
                 }
 
                 const emailjsServiceID = import.meta.env.VITE_EMAILJS_SERVICE_ID
@@ -296,7 +315,7 @@ const FormWithModel = ({
                                 className='flex flex-col items-center justify-center w-full h-52 border-2 border-gray-400 border-dashed rounded-lg cursor-pointer bg-gray-100 hover:bg-gray-200 duration-200'
                             >
                                 <>
-                                    <div className='flex flex-col items-center justify-center pt-5 pb-6'>
+                                    <div className='flex flex-col items-center justify-center pt-5 pb-6 select-none'>
                                         <svg
                                             className='w-8 h-8 mb-4 text-gray-500 dark:text-gray-400'
                                             aria-hidden='true'
@@ -322,7 +341,6 @@ const FormWithModel = ({
                                     <input
                                         required
                                         onChange={(e) => {
-                                            setOrderPrice(0)
                                             if (
                                                 !e.target.files ||
                                                 e.target.files.length < 1
@@ -343,7 +361,8 @@ const FormWithModel = ({
                                 <ModelCard
                                     handleDelete={() => {
                                         setModel(undefined)
-                                        setModelParams(null)
+                                        setModelDimensions(null)
+                                        setModelWeight(0)
                                         setOrderPrice(0)
                                     }}
                                     model={model}
@@ -524,79 +543,89 @@ const FormWithModel = ({
                         </Button>
                     </div> */}
                 </section>
+                <div
+                    className={`flex ${
+                        finalSegment ? 'flex-col-reverse' : 'flex-col'
+                    }`}
+                >
+                    {!noCountMode && (
+                        <section className='mt-2 text-right'>
+                            <p>Váha {modelWeight} g</p>
+                            <h2 className='text-md'>
+                                Celková cena:{' '}
+                                <span className='text-2xl'>
+                                    {orderPrice} Kč
+                                </span>
+                            </h2>
 
-                {!noCountMode && (
-                    <section className='mt-2 text-right'>
-                        <p>Váha {modelWeight} g</p>
-                        <h2 className='text-md'>
-                            Celková cena:{' '}
-                            <span className='text-2xl'>{orderPrice} Kč</span>
-                        </h2>
+                            {orderPrice < 200 && (
+                                <div>
+                                    <p className='text-red-500 text-md'>
+                                        Minimální cena tisku je 200 Kč
+                                    </p>
 
-                        {orderPrice < 200 && (
-                            <div>
-                                <p className='text-red-500 text-md'>
-                                    Minimální cena tisku je 200 Kč
-                                </p>
-
-                                <div className='flex justify-end gap-2'>
-                                    <label
-                                        className='text-sm'
-                                        htmlFor='agreePrice'
-                                    >
-                                        Souhlasím, s tiskem za minimální cenovou
-                                        úroveň (200 Kč)
-                                    </label>
-                                    <input
-                                        checked={agreeMinPrice}
-                                        onChange={() =>
-                                            setAgreeMinPrice((prev) => !prev)
-                                        }
-                                        type='checkbox'
-                                        name='agreePrice'
-                                        id='agreePrice'
-                                    />
+                                    <div className='flex justify-end gap-2'>
+                                        <label
+                                            className='text-sm'
+                                            htmlFor='agreePrice'
+                                        >
+                                            Souhlasím, s tiskem za minimální
+                                            cenovou úroveň (200 Kč)
+                                        </label>
+                                        <input
+                                            checked={agreeMinPrice}
+                                            onChange={() =>
+                                                setAgreeMinPrice(
+                                                    (prev) => !prev
+                                                )
+                                            }
+                                            type='checkbox'
+                                            name='agreePrice'
+                                            id='agreePrice'
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </section>
-                )}
+                            )}
+                        </section>
+                    )}
 
-                <section className={finalSegment ? 'text-left' : 'flex'}>
-                    <Button
-                        onClick={() => {
-                            if (!model) {
-                                console.log('nebyl zadan objekt')
-                                setFormErr('Nahrajte 3d objekt')
-                            } else if (
-                                !modelQuality ||
-                                !enviroment ||
-                                !surfaceQuality ||
-                                !material ||
-                                !modelColor ||
-                                (modelColor === 'other' && customColor === '')
-                            ) {
-                                setFormErr('Vyplňte všechny povinné údaje')
-                            } else if (count <= 0) {
-                                setFormErr('Zadejte počet kusů')
-                            } else if (orderPrice < 200 && !agreeMinPrice) {
-                                setFormErr(
-                                    'Minimální cena 200 Kč musí být odsouhlasena'
-                                )
-                            } else {
-                                setFormErr('')
-                                setFinalSegment((prev) => !prev)
-                            }
-                        }}
-                        className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
-                    >
-                        {finalSegment ? (
-                            <span>Jít zpět</span>
-                        ) : (
-                            <span>Přejít na objednávku</span>
-                        )}
-                    </Button>
-                </section>
+                    <section className={finalSegment ? 'text-left' : 'flex'}>
+                        <Button
+                            onClick={() => {
+                                if (!model) {
+                                    console.log('nebyl zadan objekt')
+                                    setFormErr('Nahrajte 3d objekt')
+                                } else if (
+                                    !modelQuality ||
+                                    !enviroment ||
+                                    !surfaceQuality ||
+                                    !material ||
+                                    !modelColor ||
+                                    (modelColor === 'other' &&
+                                        customColor === '')
+                                ) {
+                                    setFormErr('Vyplňte všechny povinné údaje')
+                                } else if (count <= 0) {
+                                    setFormErr('Zadejte počet kusů')
+                                } else if (orderPrice < 200 && !agreeMinPrice) {
+                                    setFormErr(
+                                        'Minimální cena 200 Kč musí být odsouhlasena'
+                                    )
+                                } else {
+                                    setFormErr('')
+                                    setFinalSegment((prev) => !prev)
+                                }
+                            }}
+                            className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
+                        >
+                            {finalSegment ? (
+                                <span>Jít zpět</span>
+                            ) : (
+                                <span>Přejít na objednávku</span>
+                            )}
+                        </Button>
+                    </section>
+                </div>
 
                 {finalSegment && (
                     <section className='flex flex-col gap-2 mt-4'>

@@ -2,6 +2,7 @@ type modelParams = {
     dimensions: { x: number; y: number; z: number }
     surface: number
     volume: number
+    innerVolume: number
 }
 
 const getPrice = ({
@@ -24,6 +25,7 @@ const getPrice = ({
     let fillPercentage = 0
     let perimeterCount = 0
     let materialDensity = 0
+    let coefficient = 0
 
     if (!modelParams || !modelQuality || !surfaceQuality || !material) return
 
@@ -65,12 +67,15 @@ const getPrice = ({
     if (modelQuality === 'low') {
         fillPercentage = 0.2
         perimeterCount = 2
+        coefficient = 1
     } else if (modelQuality === 'medium') {
         fillPercentage = 0.4
         perimeterCount = 4
+        coefficient = 0.86
     } else if (modelQuality === 'high') {
         fillPercentage = 0.7
         perimeterCount = 6
+        coefficient = 1.05
     }
     console.log(fillPercentage)
     console.log(perimeterCount)
@@ -78,7 +83,6 @@ const getPrice = ({
     let totalPrice
     let totalWeightRound
     //Samotný výpočet
-    console.log('////////////////////////////////')
 
     console.log(modelParams)
     if (modelParams.dimensions.z < 0.15) {
@@ -99,24 +103,49 @@ const getPrice = ({
         totalPrice = Math.ceil(price + price * qualityPercentage)
         totalWeightRound = Math.round(totalWeight * 100) / 100
     } else {
-        const objectVolume = modelParams.volume
-        const objectSurfaceVolume = modelParams.surface * 0.45 * perimeterCount
+        if (modelQuality === 'low' || modelQuality === 'medium') {
+            const objectVolume = modelParams.volume
+            const objectSurfaceVolume =
+                modelParams.surface * 0.45 * perimeterCount
 
-        console.log('Surface volume: ' + objectSurfaceVolume)
-        console.log('Object 100 weight: ' + objectVolume * 1.24)
+            // console.log('Surface volume: ' + objectSurfaceVolume)
+            // console.log('Object 100 weight: ' + objectVolume * 1.24)
 
-        const fillVolume = (objectVolume - objectSurfaceVolume) * fillPercentage
+            const fillVolume =
+                (objectVolume - objectSurfaceVolume) * fillPercentage
+            const totalVolume = fillVolume + objectSurfaceVolume
 
-        const totalVolume = fillVolume + objectSurfaceVolume
+            const totalWeight = totalVolume * materialDensity * coefficient
+            // console.log('Total W:' + totalWeight)
 
-        const totalWeight = totalVolume * materialDensity
-        console.log('Total W:' + totalWeight)
+            const price = totalWeight * materialPrice
 
-        const price = totalWeight * materialPrice
+            totalPrice = Math.ceil(price + price * qualityPercentage)
 
-        totalPrice = Math.ceil(price + price * qualityPercentage)
+            totalWeightRound = Math.round(totalWeight * 100) / 100
+        } else {
+            const totalVolume = modelParams.volume
 
-        totalWeightRound = Math.round(totalWeight * 100) / 100
+            const innerVolume = modelParams.innerVolume
+
+            const wallVolume = totalVolume - innerVolume
+            const fillVolume = (totalVolume - wallVolume) * fillPercentage
+
+            const wallVolumeWeight = wallVolume * materialDensity
+            const fillVolumeWeight = fillVolume * materialDensity
+
+            const totalWeight =
+                (wallVolumeWeight + fillVolumeWeight) * coefficient
+
+            const price = totalWeight * materialPrice
+
+            totalPrice = Math.ceil(price + price * qualityPercentage)
+            totalWeightRound = Math.round(totalWeight * 100) / 100
+            // console.log('Váha skorepiny= ' + wallVolume * 1.24)
+            // console.log('Váha výplně =' + fillVolume * 1.24)
+
+            // console.log('opravena vaha= ' + (wallVolume + fillVolume) * 1.24)
+        }
     }
 
     return { totalWeightRound, totalPrice }

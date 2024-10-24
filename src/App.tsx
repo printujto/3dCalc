@@ -11,7 +11,7 @@ function App() {
 
     if (sendSuccess) {
         return (
-            <main className='flex flex-col items-center'>
+            <main className='flex flex-col items-center justify-center h-80'>
                 <div className='sm:w-1/2 lg:w-1/3 w-full'>
                     <h1>Formulář úspěšně odeslán✅</h1>
                 </div>
