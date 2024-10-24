@@ -1,0 +1,21 @@
+{
+    "surfaceQualityPricing": {
+        "rough": 0,
+        "standard": 0.05,
+        "soft": 0.1
+    },
+    "carriers": [
+        {
+            "name": "PPL",
+            "price": 100
+        },
+        {
+            "name": "Packeta",
+            "price": 80
+        },
+        {
+            "name": "Česká Pošta",
+            "price": 120
+        }
+    ]
+}

@@ -4,6 +4,7 @@ import './App.css'
 import FormWithModel from './components/forms/FormWithModel.js'
 import BasicForm from './components/forms/BasicForm.js'
 import { Toaster } from 'react-hot-toast'
+import { Button } from '@nextui-org/react'
 
 function App() {
     const [uploadModel, setUploadModel] = useState(true)
@@ -14,6 +15,16 @@ function App() {
             <main className='flex flex-col items-center justify-center h-80'>
                 <div className='sm:w-1/2 lg:w-1/3 w-full'>
                     <h1>Formulář úspěšně odeslán✅</h1>
+                </div>
+                <div>
+                    <Button
+                        onClick={() => {
+                            setSendSuccess(false)
+                        }}
+                        className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
+                    >
+                        <p>Počítat znovu</p>
+                    </Button>
                 </div>
             </main>
         )

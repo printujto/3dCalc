@@ -4,22 +4,41 @@ type modelParams = {
     volume: number
     innerVolume: number
 }
+interface dataPreset {
+    surfaceQualityPricing: {
+        rough: number
+        standard: number
+        soft: number
+    }
+    carriers: [
+        {
+            name: string
+            price: number
+        }
+    ]
+}
 
 const getPrice = ({
     modelParams,
     modelQuality,
     surfaceQuality,
     material,
+    dataPreset,
+    count,
 }: {
     modelParams: modelParams
     modelQuality: string
     surfaceQuality: string
     material: string
+    dataPreset: dataPreset
+    count: number
 }) => {
     console.log(modelParams)
     console.log(modelQuality)
     console.log(surfaceQuality)
     console.log(material)
+    console.log(dataPreset)
+
     let qualityPercentage = 0
     let materialPrice = 0
     let fillPercentage = 0
@@ -54,11 +73,11 @@ const getPrice = ({
 
     //Nastavení procent za kvalitu povrchu
     if (surfaceQuality === 'rough') {
-        qualityPercentage = 0
-    } else if (surfaceQuality === 'standart') {
-        qualityPercentage = 0.05
+        qualityPercentage = dataPreset.surfaceQualityPricing.rough
+    } else if (surfaceQuality === 'standard') {
+        qualityPercentage = dataPreset.surfaceQualityPricing.standard
     } else if (surfaceQuality === 'soft') {
-        qualityPercentage = 0.1
+        qualityPercentage = dataPreset.surfaceQualityPricing.soft
     }
     console.log(qualityPercentage)
 
@@ -100,7 +119,7 @@ const getPrice = ({
         const totalWeight = customObjectVolume * materialDensity
         const price = totalWeight * materialPrice
 
-        totalPrice = Math.ceil(price + price * qualityPercentage)
+        totalPrice = Math.ceil(price + price * qualityPercentage) * count
         totalWeightRound = Math.round(totalWeight * 100) / 100
     } else {
         if (modelQuality === 'low' || modelQuality === 'medium') {
@@ -120,7 +139,7 @@ const getPrice = ({
 
             const price = totalWeight * materialPrice
 
-            totalPrice = Math.ceil(price + price * qualityPercentage)
+            totalPrice = Math.ceil(price + price * qualityPercentage) * count
 
             totalWeightRound = Math.round(totalWeight * 100) / 100
         } else {

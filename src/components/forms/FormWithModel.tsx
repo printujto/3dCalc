@@ -10,12 +10,26 @@ import axios from 'axios'
 type modelParams = {
     dimensions: { x: number; y: number; z: number }
 }
+type dataPreset = {
+    surfaceQualityPricing: {
+        rough: number
+        standard: number
+        soft: number
+    }
+    carriers: [
+        {
+            name: string
+            price: number
+        }
+    ]
+}
 
 const FormWithModel = ({
     handleSendSuccess,
 }: {
     handleSendSuccess: (state: boolean) => void
 }) => {
+    const [dataPreset, setDataPreset] = useState<dataPreset>()
     const [finalSegment, setFinalSegment] = useState(false)
     const [noCountMode, setNoCountMode] = useState(false)
     const [formErr, setFormErr] = useState('')
@@ -49,6 +63,14 @@ const FormWithModel = ({
     const [note, setNote] = useState('')
 
     useEffect(() => {
+        axios
+            .get('https://res.cloudinary.com/dlhgypwnv/raw/upload/config.json')
+            .then((res) => {
+                setDataPreset(res.data)
+            })
+    }, [])
+
+    useEffect(() => {
         showResult()
     }, [modelQuality, material, surfaceQuality, count, model])
 
@@ -71,20 +93,22 @@ const FormWithModel = ({
 
             const modelParams = await getModelParams(model)
 
-            if (!modelParams) return
+            if (!modelParams || !dataPreset) return
 
             const result = getPrice({
+                dataPreset,
                 modelParams,
                 modelQuality,
                 surfaceQuality,
                 material,
+                count,
             })
 
             if (!modelParams) return
 
             if (!result) return
 
-            setOrderPrice(result?.totalPrice * count)
+            setOrderPrice(result?.totalPrice)
             setModelWeight(result.totalWeightRound)
         }
     }
@@ -211,12 +235,9 @@ const FormWithModel = ({
             const cldUrl =
                 'https://api.cloudinary.com/v1_1/dlhgypwnv/raw/upload'
             try {
-                if (!cldUrl) return
+                if (!cldUrl || !modelDimensions) return
 
                 const result = await axios.post(cldUrl, uploadData)
-                console.log('URL')
-
-                console.log(result.data.secure_url)
 
                 const formData = {
                     firstName: firstName,
@@ -440,7 +461,7 @@ const FormWithModel = ({
                                 }}
                             >
                                 <SelectItem key={'rough'}>{'Hrubá'}</SelectItem>
-                                <SelectItem key={'standart'}>
+                                <SelectItem key={'standard'}>
                                     {'Standardní'}
                                 </SelectItem>
                                 <SelectItem key={'soft'}>{'Jemná'}</SelectItem>
@@ -533,15 +554,6 @@ const FormWithModel = ({
                             </p>
                         )}
                     </div>
-
-                    {/* <div className='flex flex-col gap-2 '>
-                        <Button
-                            onClick={showResult}
-                            className='bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
-                        >
-                            Vypočítat cenu
-                        </Button>
-                    </div> */}
                 </section>
                 <div
                     className={`flex ${
