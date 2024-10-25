@@ -1,11 +1,13 @@
 import ModelCard from '../ModelCard'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { loadOBJModel, loadSTLModel } from '../../utils/loadModel'
 import getPrice from '../../utils/getPrice'
 import { SelectItem, Select, Input, Button, Textarea } from '@nextui-org/react'
+import Dropzone, { useDropzone } from 'react-dropzone'
 import emailjs from '@emailjs/browser'
 import toast from 'react-hot-toast'
 import axios from 'axios'
+import JSZip from 'jszip'
 
 type modelParams = {
     dimensions: { x: number; y: number; z: number }
@@ -70,6 +72,13 @@ const FormWithModel = ({
     const [city, setCity] = useState('')
     const [zipCode, setZipCode] = useState('')
     const [note, setNote] = useState('')
+
+    const onDrop = useCallback((acceptedFiles) => {
+        // Do something with the files
+    }, [])
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+    })
 
     useEffect(() => {
         axios
@@ -322,17 +331,42 @@ const FormWithModel = ({
         }
     }
 
+    const sendRequest = async () => {
+        const formData = new FormData()
+        const zip = new JSZip()
+
+        if (!model) return
+
+        zip.file(model.name, model)
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' })
+        formData.append('file', zipBlob, `${model.name}_Firstname_LastName`)
+
+        const sendPromise = axios
+            .post('http://localhost:3000/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            })
+            .then((res) => {
+                console.log(res)
+            })
+
+        toast.promise(sendPromise, {
+            loading: 'Sending',
+            success: 'Formulář odeslán',
+            error: 'Někde se stala chyba',
+        })
+    }
+
     return (
         <div>
             {/* <div
                 className='w-10 h-10 bg-red-500'
                 onClick={() => setFinalSegment((prev) => !prev)}
             ></div> */}
-            <form
-                id='form'
-                className=' mt-4'
-                // onSubmit={(e) => submitForm(e)}
-            >
+            <Button onClick={sendRequest}>Send request</Button>
+            <form id='form' className=' mt-4'>
                 <section
                     className={`${
                         finalSegment ? 'hidden' : 'flex'
@@ -340,52 +374,77 @@ const FormWithModel = ({
                 >
                     <div className='flex items-center justify-center w-full'>
                         {!model ? (
-                            <label
-                                htmlFor='dropzone-file'
-                                className='flex flex-col items-center justify-center w-full h-52 border-2 border-gray-400 border-dashed rounded-lg cursor-pointer bg-gray-100 hover:bg-gray-200 duration-200'
-                            >
-                                <>
-                                    <div className='flex flex-col items-center justify-center pt-5 pb-6 select-none'>
-                                        <svg
-                                            className='w-8 h-8 mb-4 text-gray-500 dark:text-gray-400'
-                                            aria-hidden='true'
-                                            xmlns='http://www.w3.org/2000/svg'
-                                            fill='none'
-                                            viewBox='0 0 20 16'
-                                        >
-                                            <path
-                                                stroke='currentColor'
-                                                d='M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2'
-                                            />
-                                        </svg>
-                                        <p className='mb-2 text-sm text-gray-500 dark:text-gray-400'>
-                                            <span className='font-semibold'>
-                                                Nahrát 3D model
-                                            </span>
-                                        </p>
-                                        <p className='text-xs text-gray-500 dark:text-gray-400'>
-                                            .OBJ, .STL (MAX. 800x400px)
-                                        </p>
-                                    </div>
+                            <Dropzone
+                                onDrop={(e) => {
+                                    const extension = e[0].name
+                                        .split('.')
+                                        .pop()
+                                        .toLowerCase()
+                                        .toString()
+                                    console.log(extension)
 
-                                    <input
-                                        required
-                                        onChange={(e) => {
-                                            if (
-                                                !e.target.files ||
-                                                e.target.files.length < 1
-                                            )
-                                                return
-                                            setModel(e.target.files[0])
-                                        }}
-                                        type='file'
-                                        accept='.obj, .stl, .stp'
-                                        name='file'
-                                        id='dropzone-file'
-                                        className='hidden'
-                                    />
-                                </>
-                            </label>
+                                    if (
+                                        extension === 'obj' ||
+                                        extension === 'stl' ||
+                                        extension === 'stp'
+                                    ) {
+                                        if (!model) {
+                                            setModel(e[0])
+                                        }
+                                    }
+                                }}
+                            >
+                                {({ getRootProps, getInputProps }) => (
+                                    <div
+                                        {...getRootProps()}
+                                        className='flex flex-col items-center justify-center w-full h-52 border-2 border-gray-400 border-dashed rounded-lg cursor-pointer bg-gray-100 hover:bg-gray-200 duration-200'
+                                    >
+                                        <>
+                                            <div className='flex flex-col items-center justify-center pt-5 pb-6 select-none'>
+                                                <svg
+                                                    className='w-8 h-8 mb-4 text-gray-500 dark:text-gray-400'
+                                                    aria-hidden='true'
+                                                    xmlns='http://www.w3.org/2000/svg'
+                                                    fill='none'
+                                                    viewBox='0 0 20 16'
+                                                >
+                                                    <path
+                                                        stroke='currentColor'
+                                                        d='M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2'
+                                                    />
+                                                </svg>
+                                                <p className='mb-2 text-sm text-gray-500 dark:text-gray-400'>
+                                                    <span className='font-semibold'>
+                                                        Nahrát 3D model
+                                                    </span>
+                                                </p>
+                                                <p className='text-xs text-gray-500 dark:text-gray-400'>
+                                                    .OBJ, .STL (MAX. 800x400px)
+                                                </p>
+                                            </div>
+
+                                            <input
+                                                {...getInputProps()}
+                                                required
+                                                // onChange={(e) => {
+                                                //     if (
+                                                //         !e.target.files ||
+                                                //         e.target.files.length <
+                                                //             1
+                                                //     )
+                                                //         return
+                                                //     setModel(e.target.files[0])
+                                                // }}
+                                                type='file'
+                                                accept='.obj, .stl, .stp'
+                                                name='file'
+                                                id='dropzone-file'
+                                                className='hidden'
+                                            />
+                                        </>
+                                    </div>
+                                )}
+                            </Dropzone>
                         ) : (
                             <div className='p-4 w-full h-52 border-2 border-gray-400 border-dashed rounded-lg cursor-pointer bg-gray-100 hover:bg-gray-200 duration-200'>
                                 <ModelCard

@@ -4,6 +4,7 @@ import FormWithModel from './components/forms/FormWithModel.js'
 import BasicForm from './components/forms/BasicForm.js'
 import { Toaster } from 'react-hot-toast'
 import { Button } from '@nextui-org/react'
+import axios from 'axios'
 
 function App() {
     const [uploadModel, setUploadModel] = useState(true)
