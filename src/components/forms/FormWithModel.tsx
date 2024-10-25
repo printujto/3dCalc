@@ -2,12 +2,19 @@ import ModelCard from '../ModelCard'
 import { useCallback, useEffect, useState } from 'react'
 import { loadOBJModel, loadSTLModel } from '../../utils/loadModel'
 import getPrice from '../../utils/getPrice'
-import { SelectItem, Select, Input, Button, Textarea } from '@nextui-org/react'
+import {
+    SelectItem,
+    Select,
+    Input,
+    Button,
+    Textarea,
+    RadioGroup,
+    Radio,
+} from '@nextui-org/react'
 import Dropzone, { useDropzone } from 'react-dropzone'
-import emailjs from '@emailjs/browser'
 import toast from 'react-hot-toast'
 import axios from 'axios'
-import JSZip from 'jszip'
+import sendForm from '../../utils/sendForm'
 
 type modelParams = {
     dimensions: { x: number; y: number; z: number }
@@ -60,6 +67,7 @@ const FormWithModel = ({
     const [count, setCount] = useState(1)
 
     const [orderPrice, setOrderPrice] = useState(0)
+    const [carrierPrice, setCarrierPrice] = useState(0)
     const [agreeMinPrice, setAgreeMinPrice] = useState(true)
     const [modelWeight, setModelWeight] = useState(0)
 
@@ -71,11 +79,10 @@ const FormWithModel = ({
     const [street, setStreet] = useState('')
     const [city, setCity] = useState('')
     const [zipCode, setZipCode] = useState('')
+    const [selectedCarrier, setSelectedCarrier] = useState('')
     const [note, setNote] = useState('')
 
-    const onDrop = useCallback((acceptedFiles) => {
-        // Do something with the files
-    }, [])
+    const onDrop = useCallback((acceptedFiles) => {}, [])
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
     })
@@ -85,6 +92,8 @@ const FormWithModel = ({
             .get('https://res.cloudinary.com/dlhgypwnv/raw/upload/config.json')
             .then((res) => {
                 setDataPreset(res.data)
+                setCarrierPrice(res.data.carriers[0].price)
+                setSelectedCarrier(res.data.carriers[0].name)
             })
     }, [])
 
@@ -139,6 +148,7 @@ const FormWithModel = ({
             let volume, surface, dimensions, innerVolume
 
             const reader = new FileReader()
+
             const extension = model.name.split('.').pop().toLowerCase()
 
             if (extension === 'obj') {
@@ -212,10 +222,12 @@ const FormWithModel = ({
             }
         })
     }
+    console.log(enviroment)
 
     const sendOrder: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
         e.preventDefault()
         setIsSending(true)
+
         if (!model) {
             setFormErr('Nahrajte 3d objekt')
         } else if (
@@ -241,21 +253,8 @@ const FormWithModel = ({
         } else {
             setFormErr('')
 
-            const customFileName =
-                model.name.split('.')[0] + '_' + firstName + '_' + lastName
-
-            const uploadData = new FormData()
-            uploadData.append('upload_preset', 'file_upload_preset')
-            uploadData.append('public_id', customFileName)
-            uploadData.append('folder', 'models')
-            uploadData.append('file', model)
-
-            const cldUrl =
-                'https://api.cloudinary.com/v1_1/dlhgypwnv/raw/upload'
             try {
-                if (!cldUrl || !modelDimensions) return
-
-                const result = await axios.post(cldUrl, uploadData)
+                if (!modelDimensions) return
 
                 const formData = {
                     firstName: firstName,
@@ -266,12 +265,12 @@ const FormWithModel = ({
                     city: city,
                     zipcode: zipCode,
                     note: note,
-
                     modelQuality: modelQuality,
-                    enviroment:
-                        (enviroment === 'in' && 'Interiér') ||
-                        (enviroment === 'ext' && 'Exteriér') ||
-                        (enviroment === 'sun' && 'Na přímém slunci'),
+                    enviroment: {
+                        in: 'Interiér',
+                        ext: 'Exteriér',
+                        sun: 'Exteriér',
+                    }[enviroment],
                     surfaceQuality:
                         (surfaceQuality === 'rough' && 'Hrubá') ||
                         (surfaceQuality === 'standard' && 'Standardní') ||
@@ -289,38 +288,23 @@ const FormWithModel = ({
                         Math.round(modelDimensions?.dimensions?.z * 100) / 100,
 
                     count: count,
-                    orderPrice: orderPrice,
-
-                    modelUrl: result.data.secure_url,
+                    orderPrice: orderPrice + carrierPrice,
+                    carrier: selectedCarrier,
+                    carrierPrice: carrierPrice,
+                    printPrice: orderPrice,
                 }
 
-                const emailjsServiceID = import.meta.env.VITE_EMAILJS_SERVICE_ID
-                const emailjsTemplateID = import.meta.env
-                    .VITE_EMAILJS_TEMPLATE_ID
-                const emailjsSecret = import.meta.env.VITE_EMAILJS_SECRET
-
-                if (!emailjsServiceID || !emailjsTemplateID || !emailjsSecret)
-                    return
-
-                const sendPromise = emailjs
-                    .send(
-                        'service_9itde3s',
-                        emailjsTemplateID,
-                        formData,
-                        emailjsSecret
-                    )
-                    .then(
-                        () => {
+                const sendingPromise = sendForm(formData, model).then(
+                    (response) => {
+                        if (response?.status === 200) {
                             handleSendSuccess(true)
-                        },
-                        (error) => {
-                            setFormErr('Někde nastala chyba')
                         }
-                    )
+                    }
+                )
 
-                toast.promise(sendPromise, {
-                    loading: 'Sending',
-                    success: 'Formulář odeslán',
+                toast.promise(sendingPromise, {
+                    loading: 'Odesílám model',
+                    success: 'Data úspěšně dorazily',
                     error: 'Někde se stala chyba',
                 })
             } catch (error) {
@@ -331,33 +315,14 @@ const FormWithModel = ({
         }
     }
 
-    const sendRequest = async () => {
-        const formData = new FormData()
-        const zip = new JSZip()
-
-        if (!model) return
-
-        zip.file(model.name, model)
-
-        const zipBlob = await zip.generateAsync({ type: 'blob' })
-        formData.append('file', zipBlob, `${model.name}_Firstname_LastName`)
-
-        const sendPromise = axios
-            .post('https://printujtoserver.onrender.com/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            })
-            .then((res) => {
-                console.log(res)
-            })
-
-        toast.promise(sendPromise, {
-            loading: 'Sending',
-            success: 'Formulář odeslán',
-            error: 'Někde se stala chyba',
-        })
-    }
+    const carriersCollection =
+        dataPreset?.carriers.map((carrier, i) => (
+            <Radio
+                color='secondary'
+                key={carrier.name}
+                value={i.toString()}
+            >{`${carrier.name} (${carrier.price} Kč)`}</Radio>
+        )) || []
 
     return (
         <div>
@@ -365,7 +330,7 @@ const FormWithModel = ({
                 className='w-10 h-10 bg-red-500'
                 onClick={() => setFinalSegment((prev) => !prev)}
             ></div> */}
-            <Button onClick={sendRequest}>Send request</Button>
+            {/* <Button onClick={sendRequest}>Send request</Button> */}
             <form id='form' className=' mt-4'>
                 <section
                     className={`${
@@ -630,13 +595,30 @@ const FormWithModel = ({
                 >
                     {!noCountMode && (
                         <section className='mt-2 text-right'>
+                            <p className='text-sm'>Váha bude skryta</p>
                             <p>Váha {modelWeight} g</p>
                             <h2 className='text-md'>
-                                Celková cena:{' '}
-                                <span className='text-2xl'>
+                                Cena:{' '}
+                                <span className='font-semibold'>
                                     {orderPrice} Kč
                                 </span>
                             </h2>
+                            {finalSegment && (
+                                <>
+                                    <h2 className='text-md'>
+                                        Doprava:{' '}
+                                        <span className='font-semibold'>
+                                            {carrierPrice} Kč
+                                        </span>
+                                    </h2>
+                                    <h2 className='text-md'>
+                                        Cena celkem:{' '}
+                                        <span className='text-2xl'>
+                                            {orderPrice + carrierPrice} Kč
+                                        </span>
+                                    </h2>
+                                </>
+                            )}
 
                             {orderPrice < 200 && (
                                 <div>
@@ -793,6 +775,23 @@ const FormWithModel = ({
                                 label='PSČ'
                             />
                         </section>
+                        <RadioGroup
+                            defaultValue={'0'}
+                            label='Vyberte dopravce'
+                            onChange={(e) => {
+                                const index = Number(e.target.value)
+
+                                if (dataPreset)
+                                    setCarrierPrice(
+                                        dataPreset?.carriers[index].price
+                                    )
+                                setSelectedCarrier(
+                                    dataPreset?.carriers[index].name
+                                )
+                            }}
+                        >
+                            {carriersCollection}
+                        </RadioGroup>
                         <Textarea
                             label='Poznámka'
                             placeholder='Zde můžete napsat dodatečné informace'

@@ -117,7 +117,8 @@ const getPrice = ({
 
         const oneSideSurface = modelParams.surface / 2
 
-        const customObjectVolume = oneSideSurface * modelParams.dimensions.x
+        const customObjectVolume =
+            oneSideSurface * modelParams.dimensions.x * 10
 
         console.log(customObjectVolume)
 
@@ -132,7 +133,7 @@ const getPrice = ({
         const customObjectVolume = oneSideSurface * modelParams.dimensions.y
 
         const onesideSurface =
-            modelParams.dimensions.x * modelParams.dimensions.y
+            modelParams.dimensions.x * modelParams.dimensions.y * 10
 
         console.log(onesideSurface)
 
@@ -141,7 +142,7 @@ const getPrice = ({
 
         console.log(customObjectVolume)
 
-        const totalWeight = customObjectVolume * materialDensity
+        const totalWeight = customObjectVolume * materialDensity * 10
         console.log(totalWeight)
 
         const price = totalWeight * materialPrice
