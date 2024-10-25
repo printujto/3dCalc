@@ -343,7 +343,7 @@ const FormWithModel = ({
         formData.append('file', zipBlob, `${model.name}_Firstname_LastName`)
 
         const sendPromise = axios
-            .post('http://localhost:3000/upload', formData, {
+            .post('https://printujtoserver.onrender.com/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
