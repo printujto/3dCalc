@@ -43,14 +43,16 @@ type dataPreset = {
 
 const FormWithModel = ({
     handleSendSuccess,
+    handleIsUploading,
 }: {
     handleSendSuccess: (state: boolean) => void
+    handleIsUploading: (state: boolean) => void
 }) => {
     const [dataPreset, setDataPreset] = useState<dataPreset>()
     const [finalSegment, setFinalSegment] = useState(false)
     const [noCountMode, setNoCountMode] = useState(false)
     const [formErr, setFormErr] = useState('')
-    const [isSending, setIsSending] = useState(false)
+
     const [model, setModel] = useState<File>()
 
     const [modelDimensions, setModelDimensions] = useState<modelParams | null>(
@@ -66,9 +68,9 @@ const FormWithModel = ({
     const [enviroment, setEnviroment] = useState('in')
     const [count, setCount] = useState(1)
 
-    const [orderPrice, setOrderPrice] = useState(0)
+    const [printPrice, setPrintPrice] = useState(0)
     const [carrierPrice, setCarrierPrice] = useState(0)
-    const [agreeMinPrice, setAgreeMinPrice] = useState(true)
+    const [agreeMinPrice, setAgreeMinPrice] = useState(false)
     const [modelWeight, setModelWeight] = useState(0)
 
     //UserInfo
@@ -135,7 +137,7 @@ const FormWithModel = ({
 
             if (!result) return
 
-            setOrderPrice(result?.totalPrice)
+            setPrintPrice(result?.totalPrice)
             setModelWeight(result.totalWeightRound)
         }
     }
@@ -226,7 +228,7 @@ const FormWithModel = ({
 
     const sendOrder: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
         e.preventDefault()
-        setIsSending(true)
+        handleIsUploading(true)
 
         if (!model) {
             setFormErr('Nahrajte 3d objekt')
@@ -248,7 +250,7 @@ const FormWithModel = ({
             setFormErr('Vyplňte všechny povinné údaje')
         } else if (count <= 0) {
             setFormErr('Zadejte počet kusů')
-        } else if (orderPrice < 200 && !agreeMinPrice) {
+        } else if (printPrice < 200 && !agreeMinPrice) {
             setFormErr('Minimální cena 200 Kč musí být odsouhlasena')
         } else {
             setFormErr('')
@@ -288,10 +290,10 @@ const FormWithModel = ({
                         Math.round(modelDimensions?.dimensions?.z * 100) / 100,
 
                     count: count,
-                    orderPrice: orderPrice + carrierPrice,
+                    orderPrice: printPrice + carrierPrice,
                     carrier: selectedCarrier,
                     carrierPrice: carrierPrice,
-                    printPrice: orderPrice,
+                    printPrice: printPrice,
                 }
 
                 const sendingPromise = sendForm(formData, model).then(
@@ -326,11 +328,6 @@ const FormWithModel = ({
 
     return (
         <div>
-            {/* <div
-                className='w-10 h-10 bg-red-500'
-                onClick={() => setFinalSegment((prev) => !prev)}
-            ></div> */}
-            {/* <Button onClick={sendRequest}>Send request</Button> */}
             <form id='form' className=' mt-4'>
                 <section
                     className={`${
@@ -417,7 +414,7 @@ const FormWithModel = ({
                                         setModel(undefined)
                                         setModelDimensions(null)
                                         setModelWeight(0)
-                                        setOrderPrice(0)
+                                        setPrintPrice(0)
                                     }}
                                     model={model}
                                 ></ModelCard>
@@ -598,11 +595,18 @@ const FormWithModel = ({
                             <p className='text-sm'>Váha bude skryta</p>
                             <p>Váha {modelWeight} g</p>
                             <h2 className='text-md'>
-                                Cena:{' '}
-                                <span className='font-semibold'>
-                                    {orderPrice} Kč
-                                </span>
+                                Cena za tisk:{' '}
+                                {agreeMinPrice ? (
+                                    <span className='font-semibold'>
+                                        200 Kč
+                                    </span>
+                                ) : (
+                                    <span className='font-semibold'>
+                                        {printPrice} Kč
+                                    </span>
+                                )}
                             </h2>
+
                             {finalSegment && (
                                 <>
                                     <h2 className='text-md'>
@@ -613,14 +617,20 @@ const FormWithModel = ({
                                     </h2>
                                     <h2 className='text-md'>
                                         Cena celkem:{' '}
-                                        <span className='text-2xl'>
-                                            {orderPrice + carrierPrice} Kč
-                                        </span>
+                                        {agreeMinPrice ? (
+                                            <span className='text-2xl'>
+                                                {200 + carrierPrice} Kč
+                                            </span>
+                                        ) : (
+                                            <span className='text-2xl'>
+                                                {printPrice + carrierPrice} Kč
+                                            </span>
+                                        )}
                                     </h2>
                                 </>
                             )}
 
-                            {orderPrice < 200 && (
+                            {printPrice < 200 && (
                                 <div>
                                     <p className='text-red-500 text-md'>
                                         Minimální cena tisku je 200 Kč
@@ -636,11 +646,11 @@ const FormWithModel = ({
                                         </label>
                                         <input
                                             checked={agreeMinPrice}
-                                            onChange={() =>
+                                            onChange={() => {
                                                 setAgreeMinPrice(
                                                     (prev) => !prev
                                                 )
-                                            }
+                                            }}
                                             type='checkbox'
                                             name='agreePrice'
                                             id='agreePrice'
@@ -669,10 +679,6 @@ const FormWithModel = ({
                                     setFormErr('Vyplňte všechny povinné údaje')
                                 } else if (count <= 0) {
                                     setFormErr('Zadejte počet kusů')
-                                } else if (orderPrice < 200 && !agreeMinPrice) {
-                                    setFormErr(
-                                        'Minimální cena 200 Kč musí být odsouhlasena'
-                                    )
                                 } else {
                                     setFormErr('')
                                     setFinalSegment((prev) => !prev)
@@ -814,11 +820,7 @@ const FormWithModel = ({
                             type='submit'
                             className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
                         >
-                            {isSending ? (
-                                <p>Odesílání</p>
-                            ) : (
-                                <p>Nezávazně objednat</p>
-                            )}
+                            <p>Nezávazně objednat</p>
                         </Button>
                     </section>
                 )}
