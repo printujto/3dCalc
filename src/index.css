@@ -9,6 +9,11 @@
     font-weight: 400;
     font-style: normal;
 }
+html,
+body,
+main {
+    background-color: transparent;
+}
 
 h1 {
     @apply text-2xl font-bold;
