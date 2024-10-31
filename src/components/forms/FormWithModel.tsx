@@ -227,7 +227,6 @@ const FormWithModel = ({
 
     const sendOrder: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
         e.preventDefault()
-        handleIsUploading(true)
 
         if (!model) {
             setFormErr('Nahrajte 3d objekt')
@@ -253,7 +252,7 @@ const FormWithModel = ({
             setFormErr('Minimální cena 200 Kč musí být odsouhlasena')
         } else {
             setFormErr('')
-
+            handleIsUploading(true)
             try {
                 if (!modelDimensions) return
 
@@ -299,6 +298,7 @@ const FormWithModel = ({
                     (response) => {
                         if (response?.status === 200) {
                             handleSendSuccess(true)
+                            console.log('nahrannee')
                         }
                     }
                 )
@@ -326,7 +326,7 @@ const FormWithModel = ({
         )) || []
 
     return (
-        <div className={`${finalSegment ? 'pr-3' : 'pr-0'}`}>
+        <div className={`${finalSegment ? 'pr-2' : 'pr-0'}`}>
             <form id='form'>
                 <section
                     className={`${
@@ -430,6 +430,7 @@ const FormWithModel = ({
                                 defaultSelectedKeys={[modelQuality]}
                                 classNames={{
                                     selectorIcon: 'text-black',
+                                    label: 'text-gray-600',
                                     trigger: `${
                                         modelQuality
                                             ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60'
@@ -702,8 +703,9 @@ const FormWithModel = ({
                                 isRequired
                                 className='w-full'
                                 classNames={{
+                                    label: 'text-gray-600',
                                     inputWrapper:
-                                        'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                        'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                                 }}
                                 onChange={(e) => setFirstName(e.target.value)}
                                 type='text'
@@ -782,6 +784,9 @@ const FormWithModel = ({
                         </section>
                         <RadioGroup
                             defaultValue={'0'}
+                            classNames={{
+                                label: 'text-black',
+                            }}
                             label='Vyberte dopravce'
                             onChange={(e) => {
                                 const index = Number(e.target.value)
