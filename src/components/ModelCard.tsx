@@ -12,7 +12,7 @@ const ModelCard = ({
     return (
         <div
             key={model.name}
-            className='p-2 flex items-center gap-4 shadow-md bg-white hover:bg-gray-100 duration-200 w-fit rounded-xl'
+            className='p-2 flex items-center gap-4 shadow-md bg-white/90 hover:bg-white duration-200 w-fit rounded-xl'
         >
             <ModelIcon className='fill-gray-400 w-10'></ModelIcon>
             <div className='flex flex-col break-all'>

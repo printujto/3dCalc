@@ -433,8 +433,8 @@ const FormWithModel = ({
                                     label: 'text-gray-600',
                                     trigger: `${
                                         modelQuality
-                                            ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60'
-                                            : 'bg-red-400/50 data-[hover=true]:bg-red-400/60'
+                                            ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
+                                            : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
                                     }`,
                                 }}
                                 onChange={(e) => {
