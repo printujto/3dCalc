@@ -224,7 +224,6 @@ const FormWithModel = ({
             }
         })
     }
-    console.log(enviroment)
 
     const sendOrder: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
         e.preventDefault()
@@ -592,7 +591,9 @@ const FormWithModel = ({
                 >
                     {!noCountMode && (
                         <section className='mt-2 text-right'>
-                            <p className='text-sm'>Váha bude skryta</p>
+                            <p className='text-sm text-red-500 dark:text-blue-500'>
+                                Váha bude skryta
+                            </p>
                             <p>Váha {modelWeight} g</p>
                             <h2 className='text-md'>
                                 Cena za tisk:{' '}
