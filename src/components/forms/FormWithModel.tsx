@@ -326,7 +326,7 @@ const FormWithModel = ({
         )) || []
 
     return (
-        <div className={`${finalSegment ? 'pr-2' : 'pr-0'}`}>
+        <div className={`${finalSegment ? 'pr-2' : 'pr-0'} w-full`}>
             <form id='form'>
                 <section
                     className={`${
@@ -420,7 +420,6 @@ const FormWithModel = ({
                             </div>
                         )}
                     </div>
-
                     <div className='flex w-full gap-2'>
                         <div className='flex flex-col gap-2 flex-1'>
                             <Select
@@ -455,10 +454,11 @@ const FormWithModel = ({
                                 defaultSelectedKeys={[material]}
                                 classNames={{
                                     selectorIcon: 'text-black',
+                                    label: 'text-gray-600',
                                     trigger: `${
                                         material
-                                            ? 'bg-gray-200 data-[hover=true]:bg-gray-300'
-                                            : 'bg-red-200 data-[hover=true]:bg-red-300'
+                                            ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
+                                            : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
                                     }`,
                                 }}
                                 onChange={(e) => {
@@ -480,10 +480,11 @@ const FormWithModel = ({
                                 defaultSelectedKeys={[surfaceQuality]}
                                 classNames={{
                                     selectorIcon: 'text-black',
+                                    label: 'text-gray-600',
                                     trigger: `${
                                         surfaceQuality
-                                            ? 'bg-gray-200 data-[hover=true]:bg-gray-300'
-                                            : 'bg-red-200 data-[hover=true]:bg-red-300'
+                                            ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
+                                            : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
                                     }`,
                                 }}
                                 onChange={(e) => {
@@ -506,11 +507,12 @@ const FormWithModel = ({
                                 className='overflow-hidden'
                                 classNames={{
                                     selectorIcon: 'text-black',
+                                    label: 'text-gray-600',
                                     trigger: `${
                                         enviroment
-                                            ? 'bg-gray-200 data-[hover=true]:bg-gray-300'
-                                            : 'bg-red-200 data-[hover=true]:bg-red-300'
-                                    } max-w-full`,
+                                            ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
+                                            : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
+                                    }`,
                                 }}
                                 onChange={(e) => setEnviroment(e.target.value)}
                             >
@@ -532,10 +534,11 @@ const FormWithModel = ({
                                 defaultSelectedKeys={[modelColor]}
                                 classNames={{
                                     selectorIcon: 'text-black',
+                                    label: 'text-gray-600',
                                     trigger: `${
                                         modelColor
-                                            ? 'bg-gray-200 data-[hover=true]:bg-gray-300'
-                                            : 'bg-red-200 data-[hover=true]:bg-red-300'
+                                            ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
+                                            : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
                                     }`,
                                 }}
                                 onChange={(e) => setModelColor(e.target.value)}
@@ -554,8 +557,8 @@ const FormWithModel = ({
                                     classNames={{
                                         inputWrapper: `${
                                             customColor === ''
-                                                ? 'bg-red-200 data-[hover=true]:bg-red-300 data-[focus=true]:!bg-red-300'
-                                                : 'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300'
+                                                ? 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md data-[focus=true]:!bg-red-300'
+                                                : 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70'
                                         }`,
                                     }}
                                     type='text'
@@ -564,10 +567,12 @@ const FormWithModel = ({
                             )}
                         </div>
                     </div>
+
                     <Input
                         classNames={{
+                            label: 'text-gray-600',
                             inputWrapper:
-                                'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                         }}
                         type='number'
                         min={1}
@@ -576,7 +581,6 @@ const FormWithModel = ({
                         defaultValue={count.toString()}
                         onChange={(e) => setCount(+e.target.value)}
                     />
-
                     <div className='h-5'>
                         {formErr.length > 0 && (
                             <p className='text-sm text-red-500 text-right'>
@@ -684,7 +688,9 @@ const FormWithModel = ({
                                     setFinalSegment((prev) => !prev)
                                 }
                             }}
-                            className='mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
+                            className={`${
+                                finalSegment ? 'mt-0' : 'mt-2'
+                            } bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1`}
                         >
                             {finalSegment ? (
                                 <span>Jít zpět</span>
@@ -715,8 +721,9 @@ const FormWithModel = ({
                                 isRequired
                                 className='w-full'
                                 classNames={{
+                                    label: 'text-gray-600',
                                     inputWrapper:
-                                        'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                        'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                                 }}
                                 onChange={(e) => setLastName(e.target.value)}
                                 type='text'
@@ -728,8 +735,9 @@ const FormWithModel = ({
                             isRequired
                             className='w-full'
                             classNames={{
+                                label: 'text-gray-600',
                                 inputWrapper:
-                                    'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                    'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                             }}
                             onChange={(e) => setEmail(e.target.value)}
                             type='text'
@@ -739,8 +747,9 @@ const FormWithModel = ({
                             isRequired
                             className='w-full'
                             classNames={{
+                                label: 'text-gray-600',
                                 inputWrapper:
-                                    'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                    'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                             }}
                             onChange={(e) => setPhone(e.target.value)}
                             type='text'
@@ -751,8 +760,9 @@ const FormWithModel = ({
                             isRequired
                             className='w-full'
                             classNames={{
+                                label: 'text-gray-600',
                                 inputWrapper:
-                                    'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                    'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                             }}
                             onChange={(e) => setStreet(e.target.value)}
                             type='text'
@@ -763,8 +773,9 @@ const FormWithModel = ({
                                 isRequired
                                 className='w-full'
                                 classNames={{
+                                    label: 'text-gray-600',
                                     inputWrapper:
-                                        'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                        'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                                 }}
                                 onChange={(e) => setCity(e.target.value)}
                                 type='text'
@@ -774,8 +785,9 @@ const FormWithModel = ({
                                 isRequired
                                 className='w-full'
                                 classNames={{
+                                    label: 'text-gray-600',
                                     inputWrapper:
-                                        'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                        'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                                 }}
                                 onChange={(e) => setZipCode(e.target.value)}
                                 type='text'
@@ -806,8 +818,9 @@ const FormWithModel = ({
                             label='Poznámka'
                             placeholder='Zde můžete napsat dodatečné informace'
                             classNames={{
+                                label: 'text-gray-600',
                                 inputWrapper:
-                                    'bg-gray-200 data-[hover=true]:bg-gray-300 data-[focus=true]:!bg-gray-300',
+                                    'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
                             }}
                             onChange={(e) => setNote(e.target.value)}
                         />
