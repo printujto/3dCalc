@@ -60,8 +60,7 @@ const BasicForm = () => {
     }
 
     return (
-        //TODO: Po dokončení roztáhnout na šíři
-        <form className='  w-96 gap-2'>
+        <form className='gap-2 w-full'>
             <section className='flex flex-col gap-2'>
                 <section className='flex gap-2'>
                     <Input
