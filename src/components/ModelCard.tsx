@@ -1,4 +1,3 @@
-import React from 'react'
 import CrossIcon from '../assets/CrossIcon'
 import ModelIcon from '../assets/ModeIcon'
 

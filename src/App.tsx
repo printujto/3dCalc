@@ -15,7 +15,7 @@ function App() {
                         element={<PageNotFound></PageNotFound>}
                     ></Route>
                     <Route
-                        path='/poptavka'
+                        path='poptavka'
                         element={<DemandForm></DemandForm>}
                     ></Route>
                 </Routes>
