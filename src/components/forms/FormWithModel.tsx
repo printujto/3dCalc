@@ -1,5 +1,5 @@
 import ModelCard from '../ModelCard'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { loadOBJModel, loadSTLModel } from '../../utils/loadModel'
 import getPrice from '../../utils/getPrice'
 import {
@@ -11,7 +11,7 @@ import {
     RadioGroup,
     Radio,
 } from '@nextui-org/react'
-import Dropzone, { useDropzone } from 'react-dropzone'
+import Dropzone from 'react-dropzone'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import sendForm from '../../utils/sendForm'
@@ -83,11 +83,6 @@ const FormWithModel = ({
     const [zipCode, setZipCode] = useState('')
     const [selectedCarrier, setSelectedCarrier] = useState('')
     const [note, setNote] = useState('')
-
-    const onDrop = useCallback((acceptedFiles) => {}, [])
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-    })
 
     useEffect(() => {
         axios
@@ -380,7 +375,8 @@ const FormWithModel = ({
                                                     </span>
                                                 </p>
                                                 <p className='text-xs '>
-                                                    .OBJ, .STL (MAX. 800x400px)
+                                                    .OBJ, .STL, .STP (MAX. 300
+                                                    MB)
                                                 </p>
                                             </div>
 
