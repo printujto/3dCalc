@@ -9,13 +9,13 @@ function App() {
         <BrowserRouter>
             <main className='flex flex-col items-center bg-transparent'>
                 <Routes>
-                    <Route path='' element={<Calculator></Calculator>}></Route>
+                    <Route path='/' element={<Calculator></Calculator>}></Route>
                     <Route
                         path='*'
                         element={<PageNotFound></PageNotFound>}
                     ></Route>
                     <Route
-                        path='poptavka'
+                        path='/poptavka'
                         element={<DemandForm></DemandForm>}
                     ></Route>
                 </Routes>
