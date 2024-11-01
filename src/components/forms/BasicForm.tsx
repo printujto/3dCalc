@@ -10,7 +10,7 @@ import toast from 'react-hot-toast'
 const BasicForm = () => {
     const [formFiles, setFormFiles] = useState<FileList>()
     const [formErr, setFormErr] = useState('')
-    console.log(formFiles)
+    const [isUploading, setIsUploading] = useState(false)
 
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
@@ -20,7 +20,7 @@ const BasicForm = () => {
 
     const sendForm: React.MouseEventHandler<HTMLButtonElement> = (e) => {
         e.preventDefault()
-
+        setIsUploading(true)
         if (
             firstName === '' ||
             lastName === '' ||
@@ -54,6 +54,7 @@ const BasicForm = () => {
                 setPhone('')
                 setDescription('')
                 setFormErr('')
+                setIsUploading(false)
             })
         }
     }
@@ -291,7 +292,7 @@ const BasicForm = () => {
                 type='submit'
                 className='w-full mt-2 bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1'
             >
-                <p>Odeslat poptávku</p>
+                {isUploading ? <p>Odesílání</p> : <p>Odeslat poptávku</p>}
             </Button>
         </form>
     )

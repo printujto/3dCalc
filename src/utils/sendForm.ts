@@ -27,12 +27,6 @@ type formData = {
 }
 
 const sendForm = async (formData: formData, model: File) => {
-    const emailjsServiceID = import.meta.env.VITE_EMAILJS_SERVICE_ID
-    const emailjsTemplateID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
-    const emailjsSecret = import.meta.env.VITE_EMAILJS_SECRET
-
-    if (!emailjsServiceID || !emailjsTemplateID || !emailjsSecret) return
-
     const response = await fileUpload(
         model,
         formData.firstName,
@@ -43,10 +37,10 @@ const sendForm = async (formData: formData, model: File) => {
     console.log(sendData)
 
     const sendingPromise = await emailjs.send(
-        'service_9itde3s',
-        emailjsTemplateID,
+        'service_pjm2ygi',
+        import.meta.env.VITE_EMAILJS_TEMPLATE_3DCALC_ID,
         sendData,
-        emailjsSecret
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
 
     return sendingPromise

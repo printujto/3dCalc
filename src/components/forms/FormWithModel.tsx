@@ -283,7 +283,10 @@ const FormWithModel = ({
                         Math.round(modelDimensions?.dimensions?.z * 100) / 100,
 
                     count: count,
-                    orderPrice: printPrice + carrierPrice,
+                    orderPrice:
+                        printPrice > 200
+                            ? printPrice + carrierPrice
+                            : 200 + carrierPrice,
                     carrier: selectedCarrier,
                     carrierPrice: carrierPrice,
                     printPrice: printPrice,
@@ -585,117 +588,39 @@ const FormWithModel = ({
                         )}
                     </div>
                 </section>
-                <div
-                    className={`flex ${
-                        finalSegment ? 'flex-col-reverse' : 'flex-col'
-                    }`}
-                >
-                    {!noCountMode && (
-                        <section className='mt-2 text-right'>
-                            <p className='text-sm'>Váha bude skryta</p>
-                            <p>Váha {modelWeight} g</p>
-                            <h2 className='text-md'>
-                                Cena za tisk:{' '}
-                                {agreeMinPrice ? (
-                                    <span className='font-semibold'>
-                                        200 Kč
-                                    </span>
-                                ) : (
-                                    <span className='font-semibold'>
-                                        {printPrice} Kč
-                                    </span>
-                                )}
-                            </h2>
 
-                            {finalSegment && (
-                                <>
-                                    <h2 className='text-md'>
-                                        Doprava:{' '}
-                                        <span className='font-semibold'>
-                                            {carrierPrice} Kč
-                                        </span>
-                                    </h2>
-                                    <h2 className='text-md'>
-                                        Cena celkem:{' '}
-                                        {agreeMinPrice ? (
-                                            <span className='text-2xl'>
-                                                {200 + carrierPrice} Kč
-                                            </span>
-                                        ) : (
-                                            <span className='text-2xl'>
-                                                {printPrice + carrierPrice} Kč
-                                            </span>
-                                        )}
-                                    </h2>
-                                </>
-                            )}
-
-                            {printPrice < 200 && (
-                                <div>
-                                    <p className='text-red-500 text-md'>
-                                        Minimální cena tisku je 200 Kč
-                                    </p>
-
-                                    <div className='flex justify-end gap-2'>
-                                        <label
-                                            className='text-sm'
-                                            htmlFor='agreePrice'
-                                        >
-                                            Souhlasím, s tiskem za minimální
-                                            cenovou úroveň (200 Kč)
-                                        </label>
-                                        <input
-                                            checked={agreeMinPrice}
-                                            onChange={() => {
-                                                setAgreeMinPrice(
-                                                    (prev) => !prev
-                                                )
-                                            }}
-                                            type='checkbox'
-                                            name='agreePrice'
-                                            id='agreePrice'
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </section>
-                    )}
-
-                    <section className={finalSegment ? 'text-left' : 'flex'}>
-                        <Button
-                            onClick={() => {
-                                if (!model) {
-                                    console.log('nebyl zadan objekt')
-                                    setFormErr('Nahrajte 3d objekt')
-                                } else if (
-                                    !modelQuality ||
-                                    !enviroment ||
-                                    !surfaceQuality ||
-                                    !material ||
-                                    !modelColor ||
-                                    (modelColor === 'other' &&
-                                        customColor === '')
-                                ) {
-                                    setFormErr('Vyplňte všechny povinné údaje')
-                                } else if (count <= 0) {
-                                    setFormErr('Zadejte počet kusů')
-                                } else {
-                                    setFormErr('')
-                                    setFinalSegment((prev) => !prev)
-                                }
-                            }}
-                            className={`${
-                                finalSegment ? 'mt-0' : 'mt-2'
-                            } bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1`}
-                        >
-                            {finalSegment ? (
-                                <span>Jít zpět</span>
-                            ) : (
-                                <span>Přejít na objednávku</span>
-                            )}
-                        </Button>
-                    </section>
-                </div>
+                <section className={finalSegment ? 'text-left' : 'flex'}>
+                    <Button
+                        onClick={() => {
+                            if (!model) {
+                                setFormErr('Nahrajte 3d objekt')
+                            } else if (
+                                !modelQuality ||
+                                !enviroment ||
+                                !surfaceQuality ||
+                                !material ||
+                                !modelColor ||
+                                (modelColor === 'other' && customColor === '')
+                            ) {
+                                setFormErr('Vyplňte všechny povinné údaje')
+                            } else if (count <= 0) {
+                                setFormErr('Zadejte počet kusů')
+                            } else {
+                                setFormErr('')
+                                setFinalSegment((prev) => !prev)
+                            }
+                        }}
+                        className={`${
+                            finalSegment ? 'mt-0' : 'mt-2'
+                        } bg-gradient-to-tr from-violet from-30% to-pink text-white shadow-lg flex-1 text-lg font-semibold py-1`}
+                    >
+                        {finalSegment ? (
+                            <span>Jít zpět</span>
+                        ) : (
+                            <span>Přejít na objednávku</span>
+                        )}
+                    </Button>
+                </section>
 
                 {finalSegment && (
                     <section className='flex flex-col gap-2 mt-4'>
@@ -827,7 +752,83 @@ const FormWithModel = ({
                                 </p>
                             )}
                         </div>
+                    </section>
+                )}
 
+                <div
+                    className={`flex ${finalSegment ? 'flex-col' : 'flex-col'}`}
+                >
+                    {!noCountMode && (
+                        <section className='mt-2 text-right'>
+                            {/* <p className='text-sm'>Váha bude skryta</p>
+                            <p>Váha {modelWeight} g</p> */}
+                            <h2 className='text-md'>
+                                Odhadovaná cena za tisk:{' '}
+                                {agreeMinPrice ? (
+                                    <span className='font-semibold'>
+                                        200 Kč
+                                    </span>
+                                ) : (
+                                    <span className='font-semibold'>
+                                        {printPrice} Kč
+                                    </span>
+                                )}
+                            </h2>
+
+                            {finalSegment && (
+                                <>
+                                    <h2 className='text-md'>
+                                        Doprava:{' '}
+                                        <span className='font-semibold'>
+                                            {carrierPrice} Kč
+                                        </span>
+                                    </h2>
+                                    <h2 className='text-md'>
+                                        Cena celkem:{' '}
+                                        {agreeMinPrice ? (
+                                            <span className='text-2xl'>
+                                                {200 + carrierPrice} Kč
+                                            </span>
+                                        ) : (
+                                            <span className='text-2xl'>
+                                                {printPrice + carrierPrice} Kč
+                                            </span>
+                                        )}
+                                    </h2>
+                                </>
+                            )}
+
+                            {printPrice < 200 && (
+                                <div>
+                                    <p className='text-red-500 text-md'>
+                                        Minimální cena tisku je 200 Kč
+                                    </p>
+
+                                    <div className='flex justify-end gap-2'>
+                                        <label
+                                            className='text-sm'
+                                            htmlFor='agreePrice'
+                                        >
+                                            Souhlasím, s tiskem za minimální
+                                            cenovou úroveň (200 Kč)
+                                        </label>
+                                        <input
+                                            checked={agreeMinPrice}
+                                            onChange={() => {
+                                                setAgreeMinPrice(
+                                                    (prev) => !prev
+                                                )
+                                            }}
+                                            type='checkbox'
+                                            name='agreePrice'
+                                            id='agreePrice'
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </section>
+                    )}
+                    {finalSegment && (
                         <Button
                             onClick={(e) => sendOrder(e)}
                             type='submit'
@@ -835,8 +836,8 @@ const FormWithModel = ({
                         >
                             <p>Nezávazně objednat</p>
                         </Button>
-                    </section>
-                )}
+                    )}
+                </div>
             </form>
         </div>
     )

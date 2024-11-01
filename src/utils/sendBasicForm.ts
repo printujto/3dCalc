@@ -1,5 +1,4 @@
 import FilesUpload from './filesUpload'
-import toast from 'react-hot-toast'
 import emailjs from '@emailjs/browser'
 
 type formData = {
@@ -12,10 +11,6 @@ type formData = {
 }
 
 const SendBasicForm = async (formData: formData) => {
-    const emailjsTemplateID = 'template_tzjsjrm'
-    const emailjsSecret = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    console.log(formData)
-
     if (formData.formFiles && formData.formFiles.length > 0) {
         const response = await FilesUpload(
             formData.formFiles,
