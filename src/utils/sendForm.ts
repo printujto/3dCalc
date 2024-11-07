@@ -1,5 +1,5 @@
 import emailjs from '@emailjs/browser'
-import fileUpload from './fileUpload'
+import filesUpload from './filesUpload'
 
 type formData = {
     firstName: string
@@ -26,8 +26,8 @@ type formData = {
     printPrice: number
 }
 
-const sendForm = async (formData: formData, model: File) => {
-    const response = await fileUpload(
+const sendForm = async (formData: formData, model: FileList) => {
+    const response = await filesUpload(
         model,
         formData.firstName,
         formData.lastName

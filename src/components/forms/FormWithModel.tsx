@@ -10,11 +10,13 @@ import {
     Textarea,
     RadioGroup,
     Radio,
+    Link,
 } from '@nextui-org/react'
 import Dropzone from 'react-dropzone'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import sendForm from '../../utils/sendForm'
+import React from 'react'
 
 type modelParams = {
     dimensions: { x: number; y: number; z: number }
@@ -41,6 +43,12 @@ type dataPreset = {
     ]
 }
 
+type modelsResults = {
+    model: string
+    weight: number
+    price: number
+}[]
+
 const FormWithModel = ({
     handleSendSuccess,
     handleIsUploading,
@@ -53,7 +61,8 @@ const FormWithModel = ({
     const [noCountMode, setNoCountMode] = useState(false)
     const [formErr, setFormErr] = useState('')
 
-    const [model, setModel] = useState<File>()
+    const [models, setModels] = useState<FileList>()
+    const [modelsResults, setModelsResults] = useState<modelsResults>([])
 
     const [modelDimensions, setModelDimensions] = useState<modelParams | null>(
         null
@@ -61,7 +70,7 @@ const FormWithModel = ({
 
     const [material, setMaterial] = useState('PLA')
     const [modelQuality, setModelQuality] = useState('low')
-    const [surfaceQuality, setSurfaceQuality] = useState('rough')
+    const [surfaceQuality, setSurfaceQuality] = useState('standard')
 
     const [modelColor, setModelColor] = useState('black')
     const [customColor, setCustomColor] = useState('')
@@ -71,7 +80,7 @@ const FormWithModel = ({
     const [printPrice, setPrintPrice] = useState(0)
     const [carrierPrice, setCarrierPrice] = useState(0)
     const [agreeMinPrice, setAgreeMinPrice] = useState(false)
-    const [modelWeight, setModelWeight] = useState(0)
+    const [agreeTerms, setAgreeTerms] = useState(true)
 
     //UserInfo
     const [firstName, setFirstName] = useState('')
@@ -96,10 +105,10 @@ const FormWithModel = ({
 
     useEffect(() => {
         showResult()
-    }, [modelQuality, material, surfaceQuality, count, model])
+    }, [modelQuality, material, surfaceQuality, count, models])
 
     const showResult = async () => {
-        if (!model) {
+        if (!models || models.length <= 0) {
             setFormErr('Nahrajte 3d objekt')
         } else if (
             !modelQuality ||
@@ -114,26 +123,42 @@ const FormWithModel = ({
             setFormErr('Zadejte počet kusů')
         } else {
             setFormErr('')
+            const allModelsResult: React.SetStateAction<modelsResults> = []
+            let totalPrice = 0
+            Array.from(models).forEach(async (model) => {
+                const modelParams = await getModelParams(model)
 
-            const modelParams = await getModelParams(model)
+                if (!modelParams || !dataPreset) return
 
-            if (!modelParams || !dataPreset) return
+                const result = getPrice({
+                    dataPreset,
+                    modelParams,
+                    modelQuality,
+                    surfaceQuality,
+                    material,
+                    count: models.length === 1 ? count : 1,
+                })
 
-            const result = getPrice({
-                dataPreset,
-                modelParams,
-                modelQuality,
-                surfaceQuality,
-                material,
-                count,
+                console.log(result)
+
+                if (!modelParams) return
+
+                if (!result) return
+
+                const newModelResult = {
+                    model: model.name,
+                    weight: result.totalWeightRound,
+                    price: result.totalPrice,
+                }
+
+                allModelsResult.push(newModelResult)
+
+                setModelsResults(allModelsResult)
+
+                totalPrice = totalPrice + result.totalPrice
+
+                setPrintPrice(totalPrice)
             })
-
-            if (!modelParams) return
-
-            if (!result) return
-
-            setPrintPrice(result?.totalPrice)
-            setModelWeight(result.totalWeightRound)
         }
     }
 
@@ -223,7 +248,7 @@ const FormWithModel = ({
     const sendOrder: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
         e.preventDefault()
 
-        if (!model) {
+        if (!models) {
             setFormErr('Nahrajte 3d objekt')
         } else if (
             !modelQuality ||
@@ -245,11 +270,22 @@ const FormWithModel = ({
             setFormErr('Zadejte počet kusů')
         } else if (printPrice < 200 && !agreeMinPrice) {
             setFormErr('Minimální cena 200 Kč musí být odsouhlasena')
+        } else if (!agreeTerms) {
+            setFormErr('Obchodní podmínky musí být odsouhlaseny')
         } else {
             setFormErr('')
             handleIsUploading(true)
             try {
                 if (!modelDimensions) return
+
+                let allModels: string = ''
+
+                modelsResults.map((model) => {
+                    const modelStat = `${model.model} - Váha: ${model.weight} g, Vypočítaná cena: ${model.price} Kč ||`
+                    allModels = allModels + modelStat
+                })
+
+                console.log(allModels)
 
                 const formData = {
                     firstName: firstName,
@@ -273,16 +309,16 @@ const FormWithModel = ({
                     material: material,
                     modelColor:
                         modelColor === 'other' ? customColor : modelColor,
+                    allModels: allModels,
+                    // modelWeight: modelWeight,
+                    // modelDimensionX:
+                    //     Math.round(modelDimensions?.dimensions?.x * 100) / 100,
+                    // modelDimensionY:
+                    //     Math.round(modelDimensions?.dimensions?.y * 100) / 100,
+                    // modelDimensionZ:
+                    //     Math.round(modelDimensions?.dimensions?.z * 100) / 100,
 
-                    modelWeight: modelWeight,
-                    modelDimensionX:
-                        Math.round(modelDimensions?.dimensions?.x * 100) / 100,
-                    modelDimensionY:
-                        Math.round(modelDimensions?.dimensions?.y * 100) / 100,
-                    modelDimensionZ:
-                        Math.round(modelDimensions?.dimensions?.z * 100) / 100,
-
-                    count: count,
+                    count: models.length === 1 ? count : 1,
                     orderPrice:
                         printPrice > 200
                             ? printPrice + carrierPrice
@@ -291,8 +327,8 @@ const FormWithModel = ({
                     carrierPrice: carrierPrice,
                     printPrice: printPrice,
                 }
-
-                const sendingPromise = sendForm(formData, model).then(
+                //TODO: Počítáme, teď stačí předělat send na více modelů.. to už mám pomocí funkce sendFiles, jinak to bude stejné
+                const sendingPromise = sendForm(formData, models).then(
                     (response) => {
                         if (response?.status === 200) {
                             handleSendSuccess(true)
@@ -302,7 +338,7 @@ const FormWithModel = ({
                 )
 
                 toast.promise(sendingPromise, {
-                    loading: 'Odesílám model',
+                    loading: 'Odesílní formuláře',
                     success: 'Data úspěšně dorazily',
                     error: 'Někde se stala chyba',
                 })
@@ -332,57 +368,59 @@ const FormWithModel = ({
                     } flex-col gap-2`}
                 >
                     <div className='flex items-center justify-center w-full'>
-                        {!model ? (
-                            <Dropzone
-                                onDrop={(e) => {
-                                    const extension = e[0].name
-                                        .split('.')
-                                        .pop()
-                                        .toLowerCase()
-                                        .toString()
-                                    console.log(extension)
+                        <Dropzone
+                            onDrop={(e) => {
+                                const extension = e[0].name
+                                    .split('.')
+                                    .pop()
+                                    .toLowerCase()
+                                    .toString()
 
-                                    if (
-                                        extension === 'obj' ||
-                                        extension === 'stl' ||
-                                        extension === 'stp'
-                                    ) {
-                                        if (!model) {
-                                            setModel(e[0])
-                                        }
+                                if (
+                                    extension === 'obj' ||
+                                    extension === 'stl' ||
+                                    extension === 'stp'
+                                ) {
+                                    setFormErr('')
+
+                                    if (!models) {
+                                        setModels(e)
+                                    } else {
+                                        const filesArray = Array.from(models)
+                                        const newItems = Array.from(e)
+
+                                        newItems.forEach((item: File) => {
+                                            filesArray.push(item)
+                                        })
+
+                                        const dataTransfer = new DataTransfer()
+
+                                        filesArray.forEach((file) => {
+                                            dataTransfer.items.add(file)
+                                        })
+
+                                        const newFileList = dataTransfer.files
+
+                                        setModels(newFileList)
                                     }
-                                }}
-                            >
-                                {({ getRootProps, getInputProps }) => (
-                                    <div
-                                        {...getRootProps()}
-                                        className='flex flex-col items-center justify-center w-full h-52 border-2 border-gray-700/50 border-dashed rounded-lg cursor-pointer bg-gray-300/50 hover:bg-gray-200/50 duration-200'
-                                    >
-                                        <>
-                                            <div className='flex flex-col items-center justify-center pt-5 pb-6 select-none'>
-                                                <svg
-                                                    className='w-8 h-8 mb-4  '
-                                                    aria-hidden='true'
-                                                    xmlns='http://www.w3.org/2000/svg'
-                                                    fill='none'
-                                                    viewBox='0 0 20 16'
-                                                >
-                                                    <path
-                                                        stroke='currentColor'
-                                                        d='M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2'
-                                                    />
-                                                </svg>
-                                                <p className='mb-2 text-sm '>
-                                                    <span className='font-semibold'>
-                                                        Nahrát 3D model
-                                                    </span>
-                                                </p>
-                                                <p className='text-xs '>
-                                                    .OBJ, .STL, .STP (MAX. 300
-                                                    MB)
-                                                </p>
-                                            </div>
-
+                                } else {
+                                    setFormErr('Formát souboru není povolen')
+                                }
+                            }}
+                        >
+                            {({ getRootProps, getInputProps }) => (
+                                <div
+                                    {...getRootProps()}
+                                    className='flex flex-col items-center justify-center w-full h-52 border-2 border-gray-700/50 border-dashed rounded-lg cursor-pointer bg-gray-300/50 hover:bg-gray-200/50 duration-200'
+                                >
+                                    <>
+                                        <div
+                                            className={`${
+                                                !models || models.length < 1
+                                                    ? 'items-center justify-center'
+                                                    : 'items-start justify-start p-2 gap-2 overflow-y-scroll '
+                                            } select-none flex flex-col w-full h-full`}
+                                        >
                                             <input
                                                 {...getInputProps()}
                                                 required
@@ -401,23 +439,102 @@ const FormWithModel = ({
                                                 id='dropzone-file'
                                                 className='hidden'
                                             />
-                                        </>
-                                    </div>
-                                )}
-                            </Dropzone>
-                        ) : (
-                            <div className='p-4 w-full h-52 border-2 border-gray-700/50 border-dashed rounded-lg cursor-pointer bg-gray-300/50 hover:bg-gray-200/50 duration-200'>
-                                <ModelCard
-                                    handleDelete={() => {
-                                        setModel(undefined)
-                                        setModelDimensions(null)
-                                        setModelWeight(0)
-                                        setPrintPrice(0)
-                                    }}
-                                    model={model}
-                                ></ModelCard>
-                            </div>
-                        )}
+
+                                            {!models || models.length <= 0 ? (
+                                                <>
+                                                    <svg
+                                                        className='w-8 h-8 mb-4  '
+                                                        aria-hidden='true'
+                                                        xmlns='http://www.w3.org/2000/svg'
+                                                        fill='none'
+                                                        viewBox='0 0 20 16'
+                                                    >
+                                                        <path
+                                                            stroke='currentColor'
+                                                            d='M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2'
+                                                        />
+                                                    </svg>
+                                                    <p className='mb-2 text-sm '>
+                                                        <span className='font-semibold'>
+                                                            Nahrát 3D model
+                                                        </span>
+                                                    </p>
+                                                    <p className='text-xs '>
+                                                        .OBJ, .STL, .STP (MAX.
+                                                        300 MB)
+                                                    </p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {models &&
+                                                        Array.from(models).map(
+                                                            (model, i) => (
+                                                                <React.Fragment
+                                                                    key={i}
+                                                                >
+                                                                    <ModelCard
+                                                                        handleDelete={(
+                                                                            id: number,
+                                                                            event: React.MouseEvent
+                                                                        ) => {
+                                                                            console.log(
+                                                                                id
+                                                                            )
+                                                                            event.preventDefault()
+                                                                            event.stopPropagation()
+
+                                                                            const modelListArray =
+                                                                                Array.from(
+                                                                                    models
+                                                                                )
+                                                                            modelListArray.splice(
+                                                                                id,
+                                                                                1
+                                                                            )
+
+                                                                            const dataTransfer =
+                                                                                new DataTransfer()
+
+                                                                            modelListArray.forEach(
+                                                                                (
+                                                                                    model
+                                                                                ) => {
+                                                                                    dataTransfer.items.add(
+                                                                                        model
+                                                                                    )
+                                                                                }
+                                                                            )
+
+                                                                            const newModelList =
+                                                                                dataTransfer.files
+
+                                                                            setModels(
+                                                                                newModelList
+                                                                            )
+
+                                                                            setModelDimensions(
+                                                                                null
+                                                                            )
+
+                                                                            setPrintPrice(
+                                                                                0
+                                                                            )
+                                                                        }}
+                                                                        id={i}
+                                                                        model={
+                                                                            model
+                                                                        }
+                                                                    ></ModelCard>
+                                                                </React.Fragment>
+                                                            )
+                                                        )}
+                                                </>
+                                            )}
+                                        </div>
+                                    </>
+                                </div>
+                            )}
+                        </Dropzone>
                     </div>
                     <div className='flex w-full gap-2'>
                         <div className='flex flex-col gap-2 flex-1'>
@@ -566,20 +683,21 @@ const FormWithModel = ({
                             )}
                         </div>
                     </div>
-
-                    <Input
-                        classNames={{
-                            label: 'text-gray-600',
-                            inputWrapper:
-                                'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
-                        }}
-                        type='number'
-                        min={1}
-                        max={500}
-                        label='Zadejte počet kusů'
-                        defaultValue={count.toString()}
-                        onChange={(e) => setCount(+e.target.value)}
-                    />
+                    {models?.length === 1 && (
+                        <Input
+                            classNames={{
+                                label: 'text-gray-600',
+                                inputWrapper:
+                                    'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 data-[focus=true]:!bg-gray-300/70',
+                            }}
+                            type='number'
+                            min={1}
+                            max={500}
+                            label='Zadejte počet kusů'
+                            defaultValue={count.toString()}
+                            onChange={(e) => setCount(+e.target.value)}
+                        />
+                    )}
                     <div className='h-5'>
                         {formErr.length > 0 && (
                             <p className='text-sm text-red-500 text-right'>
@@ -592,8 +710,8 @@ const FormWithModel = ({
                 <section className={finalSegment ? 'text-left' : 'flex'}>
                     <Button
                         onClick={() => {
-                            if (!model) {
-                                setFormErr('Nahrajte 3d objekt')
+                            if (!models || models.length <= 0) {
+                                setFormErr('Nahrajte 3D modely')
                             } else if (
                                 !modelQuality ||
                                 !enviroment ||
@@ -759,9 +877,7 @@ const FormWithModel = ({
                     className={`flex ${finalSegment ? 'flex-col' : 'flex-col'}`}
                 >
                     {!noCountMode && (
-                        <section className='mt-2 text-right'>
-                            {/* <p className='text-sm'>Váha bude skryta</p>
-                            <p>Váha {modelWeight} g</p> */}
+                        <section className='mt-2 text-right flex flex-col items-end'>
                             <h2 className='text-md'>
                                 Odhadovaná cena za tisk:{' '}
                                 {agreeMinPrice ? (
@@ -810,7 +926,10 @@ const FormWithModel = ({
                                             htmlFor='agreePrice'
                                         >
                                             Souhlasím, s tiskem za minimální
-                                            cenovou úroveň (200 Kč)
+                                            cenovou úroveň{' '}
+                                            <span className='text-nowrap'>
+                                                (200 Kč)
+                                            </span>
                                         </label>
                                         <input
                                             checked={agreeMinPrice}
@@ -826,6 +945,33 @@ const FormWithModel = ({
                                     </div>
                                 </div>
                             )}
+
+                            <div>
+                                <div className='flex justify-end gap-2'>
+                                    <label
+                                        className='text-sm'
+                                        htmlFor='agreeTerms'
+                                    >
+                                        Souhlasím, s{' '}
+                                        <Link
+                                            className='text-violet hover:text-violet-hover duration-200'
+                                            target='_blank'
+                                            href='https://printujto.cz/obchodni-podminky'
+                                        >
+                                            Obchodníma podmínkama
+                                        </Link>
+                                    </label>
+                                    <input
+                                        checked={agreeTerms}
+                                        onChange={() => {
+                                            setAgreeTerms((prev) => !prev)
+                                        }}
+                                        type='checkbox'
+                                        name='agreeTerms'
+                                        id='agreeTerms'
+                                    />
+                                </div>
+                            </div>
                         </section>
                     )}
                     {finalSegment && (

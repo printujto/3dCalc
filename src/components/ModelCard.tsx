@@ -3,10 +3,15 @@ import ModelIcon from '../assets/ModeIcon'
 
 const ModelCard = ({
     model,
+    id,
     handleDelete,
 }: {
     model: File
-    handleDelete?: () => void
+    id: number
+    handleDelete: (
+        id: number,
+        event: React.MouseEvent<HTMLDivElement, MouseEvent>
+    ) => void
 }) => {
     return (
         <div
@@ -23,7 +28,7 @@ const ModelCard = ({
                 </span>
             </div>
 
-            <div className='p-1' onClick={handleDelete}>
+            <div className='p-1' onClick={(event) => handleDelete(id, event)}>
                 <CrossIcon className='w-6 fill-red-500 hover:fill-red-600 duration-200'></CrossIcon>
             </div>
         </div>

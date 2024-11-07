@@ -141,7 +141,6 @@ const BasicForm = () => {
                                 .pop()
                                 .toLowerCase()
                                 .toString()
-                            console.log(extension)
 
                             if (
                                 extension === 'jpg' ||
@@ -150,7 +149,6 @@ const BasicForm = () => {
                                 extension === 'gif' ||
                                 extension === 'pdf'
                             ) {
-                                console.log(e)
                                 setFormErr('')
 
                                 if (!formFiles || formFiles.length < 1) {

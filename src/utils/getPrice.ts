@@ -132,18 +132,7 @@ const getPrice = ({
 
         const customObjectVolume = oneSideSurface * modelParams.dimensions.y
 
-        const onesideSurface =
-            modelParams.dimensions.x * modelParams.dimensions.y * 10
-
-        console.log(onesideSurface)
-
-        console.log(oneSideSurface * modelParams.dimensions.y)
-        console.log('.....................')
-
-        console.log(customObjectVolume)
-
         const totalWeight = customObjectVolume * materialDensity * 10
-        console.log(totalWeight)
 
         const price = totalWeight * materialPrice
 
@@ -152,8 +141,6 @@ const getPrice = ({
     } else if (modelParams.dimensions.z < 0.15) {
         const oneSideSurface = modelParams.surface / 2
         const customObjectVolume = oneSideSurface * modelParams.dimensions.z
-
-        console.log(customObjectVolume)
 
         const totalWeight = customObjectVolume * materialDensity
         const price = totalWeight * materialPrice
@@ -166,15 +153,11 @@ const getPrice = ({
             const objectSurfaceVolume =
                 modelParams.surface * 0.45 * perimeterCount
 
-            // console.log('Surface volume: ' + objectSurfaceVolume)
-            // console.log('Object 100 weight: ' + objectVolume * 1.24)
-
             const fillVolume =
                 (objectVolume - objectSurfaceVolume) * fillPercentage
             const totalVolume = fillVolume + objectSurfaceVolume
 
             const totalWeight = totalVolume * materialDensity * coefficient
-            // console.log('Total W:' + totalWeight)
 
             const price = totalWeight * materialPrice
 
@@ -197,13 +180,33 @@ const getPrice = ({
 
             const price = totalWeight * materialPrice
 
-            totalPrice = Math.ceil(price + price * qualityPercentage)
-            totalWeightRound = Math.round(totalWeight * 100) / 100
-            // console.log('Váha skorepiny= ' + wallVolume * 1.24)
-            // console.log('Váha výplně =' + fillVolume * 1.24)
+            const totalPriceHigh = Math.ceil(price + price * qualityPercentage)
 
-            // console.log('opravena vaha= ' + (wallVolume + fillVolume) * 1.24)
+            //check price for medium
+
+            const objectVolume = modelParams.volume
+            const objectSurfaceVolume = modelParams.surface * 0.45 * 4
+
+            const fillVolumeMed = (objectVolume - objectSurfaceVolume) * 0.4
+            const totalVolumeMed = fillVolumeMed + objectSurfaceVolume
+
+            const totalWeightMed = totalVolumeMed * materialDensity * 0.86
+
+            const priceMed = totalWeightMed * materialPrice
+            const totalPriceMed = Math.ceil(
+                priceMed + priceMed * qualityPercentage
+            )
+
+            //porovnavani vysledku v med a high quality
+            if (totalPriceMed > totalPriceHigh) {
+                totalPrice = totalPriceMed * count
+                totalWeightRound = Math.round(totalWeightMed * 100) / 100
+            } else {
+                totalPrice = totalPriceHigh * count
+                totalWeightRound = Math.round(totalWeight * 100) / 100
+            }
         }
+        console.log('Total weight:' + totalWeightRound)
     }
 
     return { totalWeightRound, totalPrice }
