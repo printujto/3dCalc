@@ -115,7 +115,7 @@ const FormWithModel = ({
 
     useEffect(() => {
         showResult()
-    }, [modelQuality, material, surfaceQuality, count, models])
+    }, [modelQuality, material && material, surfaceQuality, count, models])
 
     const showResult = async () => {
         if (!models || models.length <= 0) {
