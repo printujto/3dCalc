@@ -53,7 +53,14 @@ const getPrice = ({
     let materialDensity: undefined | number = 0
     let coefficient = 0
 
-    if (!modelParams || !modelQuality || !surfaceQuality || !material) return
+    if (
+        !modelParams ||
+        !modelQuality ||
+        !surfaceQuality ||
+        !material ||
+        !dataPreset
+    )
+        return
 
     //Nastavení ceny za materiál a hustota materiálu
 
