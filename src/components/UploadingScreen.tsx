@@ -4,7 +4,7 @@ const UploadingScreen = () => {
     return (
         <div className='flex flex-col items-center justify-center'>
             <img
-                className='	filter: brightness(0) filter: contrast(2)'
+                className='filter:brightness(100) filter: contrast-200'
                 width={50}
                 src={Cloud}
                 alt='Uploading gif'

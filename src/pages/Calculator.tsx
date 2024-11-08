@@ -5,7 +5,7 @@ import SuccessScreen from '../components/SuccessScreen'
 
 const Calculator = () => {
     const [sendSuccess, setSendSuccess] = useState(false)
-    const [isUploading, setIsUploading] = useState(false)
+    const [isUploading, setIsUploading] = useState(true)
 
     if (sendSuccess) {
         return (
