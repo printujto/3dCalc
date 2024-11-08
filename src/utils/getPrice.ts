@@ -10,14 +10,13 @@ interface dataPreset {
         standard: number
         soft: number
     }
-    materialPrices: {
-        PLA: number
-        PETG: number
-        ASA: number
-        ABS: number
-        PC: number
-        TPU: number
-    }
+    materialPrices: [
+        {
+            material: string
+            price: number
+            density: number
+        }
+    ]
     carriers: [
         {
             name: string
@@ -48,34 +47,46 @@ const getPrice = ({
     console.log(dataPreset)
 
     let qualityPercentage = 0
-    let materialPrice = 0
+    let materialPrice: undefined | number = 0
     let fillPercentage = 0
     let perimeterCount = 0
-    let materialDensity = 0
+    let materialDensity: undefined | number = 0
     let coefficient = 0
 
     if (!modelParams || !modelQuality || !surfaceQuality || !material) return
 
     //Nastavení ceny za materiál a hustota materiálu
-    if (material === 'PLA') {
-        materialPrice = dataPreset.materialPrices.PLA
-        materialDensity = 1.24
-    } else if (material === 'PETG') {
-        materialPrice = dataPreset.materialPrices.PETG
-        materialDensity = 1.27
-    } else if (material === 'ASA') {
-        materialPrice = dataPreset.materialPrices.ASA
-        materialDensity = 1.04
-    } else if (material === 'ABS') {
-        materialPrice = dataPreset.materialPrices.ABS
-        materialDensity = 1.04
-    } else if (material === 'PC') {
-        materialPrice = dataPreset.materialPrices.PC
-        materialDensity = 1.04
-    } else if (material === 'TPU') {
-        materialPrice = dataPreset.materialPrices.TPU
-        materialDensity = 1.24
-    }
+    //TODO:zmenit funkcionalitu hledani
+    console.log('.xdjfsldjfljals.fasdfjasdl')
+
+    materialPrice = dataPreset.materialPrices.find((selectedMaterial) => {
+        return selectedMaterial.material === material
+    })?.price
+
+    materialDensity = dataPreset.materialPrices.find((selectedMaterial) => {
+        return selectedMaterial.material === material
+    })?.density
+
+    if (!materialPrice || !materialDensity) return
+    // if (material === 'PLA') {
+    //     materialPrice = dataPreset.materialPrices.PLA
+    //     materialDensity = 1.24
+    // } else if (material === 'PETG') {
+    //     materialPrice = dataPreset.materialPrices.PETG
+    //     materialDensity = 1.27
+    // } else if (material === 'ASA') {
+    //     materialPrice = dataPreset.materialPrices.ASA
+    //     materialDensity = 1.04
+    // } else if (material === 'ABS') {
+    //     materialPrice = dataPreset.materialPrices.ABS
+    //     materialDensity = 1.04
+    // } else if (material === 'PC') {
+    //     materialPrice = dataPreset.materialPrices.PC
+    //     materialDensity = 1.04
+    // } else if (material === 'TPU') {
+    //     materialPrice = dataPreset.materialPrices.TPU
+    //     materialDensity = 1.24
+    // }
     console.log(materialPrice)
     console.log(materialDensity)
 

@@ -27,14 +27,21 @@ type dataPreset = {
         standard: number
         soft: number
     }
-    materialPrices: {
-        PLA: number
-        PETG: number
-        ASA: number
-        ABS: number
-        PC: number
-        TPU: number
-    }
+    materialPrices: [
+        {
+            material: string
+            price: number
+            density: number
+        }
+    ]
+    // {
+    //     PLA: number
+    //     PETG: number
+    //     ASA: number
+    //     ABS: number
+    //     PC: number
+    //     TPU: number
+    // }
     carriers: [
         {
             name: string
@@ -68,7 +75,8 @@ const FormWithModel = ({
         null
     )
 
-    const [material, setMaterial] = useState('PLA')
+    const [material, setMaterial] = useState('')
+
     const [modelQuality, setModelQuality] = useState('low')
     const [surfaceQuality, setSurfaceQuality] = useState('standard')
 
@@ -98,11 +106,13 @@ const FormWithModel = ({
             .get('https://res.cloudinary.com/dlhgypwnv/raw/upload/config.json')
             .then((res) => {
                 setDataPreset(res.data)
+                console.log(res.data)
+                setMaterial(res.data.materialPrices[0].material)
                 setCarrierPrice(res.data.carriers[0].price)
                 setSelectedCarrier(res.data.carriers[0].name)
             })
     }, [])
-
+    console.log(material)
     useEffect(() => {
         showResult()
     }, [modelQuality, material, surfaceQuality, count, models])
@@ -327,7 +337,7 @@ const FormWithModel = ({
                     carrierPrice: carrierPrice,
                     printPrice: printPrice,
                 }
-                //TODO: Počítáme, teď stačí předělat send na více modelů.. to už mám pomocí funkce sendFiles, jinak to bude stejné
+
                 const sendingPromise = sendForm(formData, models).then(
                     (response) => {
                         if (response?.status === 200) {
@@ -358,7 +368,12 @@ const FormWithModel = ({
                 value={i.toString()}
             >{`${carrier.name} (${carrier.price} Kč)`}</Radio>
         )) || []
-
+    const materialPricesCollection =
+        dataPreset?.materialPrices.map((material, i) => (
+            <SelectItem value={material.material} key={material.material}>
+                {material.material}
+            </SelectItem>
+        )) || []
     return (
         <div className={`${finalSegment ? 'pr-2' : 'pr-0'} w-full`}>
             <form id='form'>
@@ -563,31 +578,34 @@ const FormWithModel = ({
                                 <SelectItem key={'high'}>{'Vysoká'}</SelectItem>
                             </Select>
 
-                            <Select
-                                isRequired
-                                label='Materiál'
-                                placeholder='Zvolte materiál'
-                                defaultSelectedKeys={[material]}
-                                classNames={{
-                                    selectorIcon: 'text-black',
-                                    label: 'text-gray-600',
-                                    trigger: `${
-                                        material
-                                            ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
-                                            : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
-                                    }`,
-                                }}
-                                onChange={(e) => {
-                                    setMaterial(e.target.value)
-                                }}
-                            >
-                                <SelectItem key={'PLA'}>{'PLA'}</SelectItem>
+                            {dataPreset && (
+                                <Select
+                                    isRequired
+                                    label='Materiál'
+                                    placeholder='Zvolte materiál'
+                                    defaultSelectedKeys={['PLA']}
+                                    classNames={{
+                                        selectorIcon: 'text-black',
+                                        label: 'text-gray-600',
+                                        trigger: `${
+                                            material
+                                                ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
+                                                : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
+                                        }`,
+                                    }}
+                                    onChange={(e) => {
+                                        setMaterial(e.target.value)
+                                    }}
+                                >
+                                    {materialPricesCollection}
+                                    {/* <SelectItem key={'PLA'}>{'PLA'}</SelectItem>
                                 <SelectItem key={'PETG'}>{'Pet-G'}</SelectItem>
                                 <SelectItem key={'ASA'}>{'ASA'}</SelectItem>
                                 <SelectItem key={'ABS'}>{'ABS'}</SelectItem>
                                 <SelectItem key={'PC'}>{'PC'}</SelectItem>
-                                <SelectItem key={'TPU'}>{'TPU'}</SelectItem>
-                            </Select>
+                                <SelectItem key={'TPU'}>{'TPU'}</SelectItem> */}
+                                </Select>
+                            )}
 
                             <Select
                                 isRequired
