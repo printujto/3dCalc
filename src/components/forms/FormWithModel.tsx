@@ -368,8 +368,9 @@ const FormWithModel = ({
                 value={i.toString()}
             >{`${carrier.name} (${carrier.price} Kč)`}</Radio>
         )) || []
+
     const materialPricesCollection =
-        dataPreset?.materialPrices.map((material) => (
+        dataPreset?.materialPrices?.map((material) => (
             <SelectItem value={material.material} key={material.material}>
                 {material.material}
             </SelectItem>
@@ -578,33 +579,34 @@ const FormWithModel = ({
                                 <SelectItem key={'high'}>{'Vysoká'}</SelectItem>
                             </Select>
 
-                            <Select
-                                isRequired
-                                label='Materiál'
-                                placeholder='Zvolte materiál'
-                                defaultSelectedKeys={['PLA']}
-                                classNames={{
-                                    selectorIcon: 'text-black',
-                                    label: 'text-gray-600',
-                                    trigger: `${
-                                        material
-                                            ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
-                                            : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
-                                    }`,
-                                }}
-                                onChange={(e) => {
-                                    setMaterial(e.target.value)
-                                }}
-                            >
-                                {materialPricesCollection}
-                                {/* <SelectItem key={'PLA'}>{'PLA'}</SelectItem>
+                            {dataPreset && (
+                                <Select
+                                    isRequired
+                                    label='Materiál'
+                                    placeholder='Zvolte materiál'
+                                    defaultSelectedKeys={['PLA']}
+                                    classNames={{
+                                        selectorIcon: 'text-black',
+                                        label: 'text-gray-600',
+                                        trigger: `${
+                                            material
+                                                ? 'bg-gray-300/50 data-[hover=true]:bg-gray-300/60 shadow-md'
+                                                : 'bg-red-400/50 data-[hover=true]:bg-red-400/60 shadow-md'
+                                        }`,
+                                    }}
+                                    onChange={(e) => {
+                                        setMaterial(e.target.value)
+                                    }}
+                                >
+                                    {materialPricesCollection}
+                                    {/* <SelectItem key={'PLA'}>{'PLA'}</SelectItem>
                                 <SelectItem key={'PETG'}>{'Pet-G'}</SelectItem>
                                 <SelectItem key={'ASA'}>{'ASA'}</SelectItem>
                                 <SelectItem key={'ABS'}>{'ABS'}</SelectItem>
                                 <SelectItem key={'PC'}>{'PC'}</SelectItem>
                                 <SelectItem key={'TPU'}>{'TPU'}</SelectItem> */}
-                            </Select>
-
+                                </Select>
+                            )}
                             <Select
                                 isRequired
                                 label='Kvalita povrchu'
