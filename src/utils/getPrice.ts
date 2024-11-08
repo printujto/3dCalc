@@ -56,8 +56,6 @@ const getPrice = ({
     if (!modelParams || !modelQuality || !surfaceQuality || !material) return
 
     //Nastavení ceny za materiál a hustota materiálu
-    //TODO:zmenit funkcionalitu hledani
-    console.log('.xdjfsldjfljals.fasdfjasdl')
 
     materialPrice = dataPreset.materialPrices.find((selectedMaterial) => {
         return selectedMaterial.material === material
@@ -68,25 +66,7 @@ const getPrice = ({
     })?.density
 
     if (!materialPrice || !materialDensity) return
-    // if (material === 'PLA') {
-    //     materialPrice = dataPreset.materialPrices.PLA
-    //     materialDensity = 1.24
-    // } else if (material === 'PETG') {
-    //     materialPrice = dataPreset.materialPrices.PETG
-    //     materialDensity = 1.27
-    // } else if (material === 'ASA') {
-    //     materialPrice = dataPreset.materialPrices.ASA
-    //     materialDensity = 1.04
-    // } else if (material === 'ABS') {
-    //     materialPrice = dataPreset.materialPrices.ABS
-    //     materialDensity = 1.04
-    // } else if (material === 'PC') {
-    //     materialPrice = dataPreset.materialPrices.PC
-    //     materialDensity = 1.04
-    // } else if (material === 'TPU') {
-    //     materialPrice = dataPreset.materialPrices.TPU
-    //     materialDensity = 1.24
-    // }
+
     console.log(materialPrice)
     console.log(materialDensity)
 

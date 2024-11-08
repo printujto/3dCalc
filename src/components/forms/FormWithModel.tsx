@@ -75,7 +75,7 @@ const FormWithModel = ({
         null
     )
 
-    const [material, setMaterial] = useState('')
+    const [material, setMaterial] = useState<undefined | string>()
 
     const [modelQuality, setModelQuality] = useState('low')
     const [surfaceQuality, setSurfaceQuality] = useState('standard')
@@ -106,13 +106,13 @@ const FormWithModel = ({
             .get('https://res.cloudinary.com/dlhgypwnv/raw/upload/config.json')
             .then((res) => {
                 setDataPreset(res.data)
-                console.log(res.data)
+
                 setMaterial(res.data.materialPrices[0].material)
                 setCarrierPrice(res.data.carriers[0].price)
                 setSelectedCarrier(res.data.carriers[0].name)
             })
     }, [])
-    console.log(material)
+
     useEffect(() => {
         showResult()
     }, [modelQuality, material, surfaceQuality, count, models])
@@ -369,7 +369,7 @@ const FormWithModel = ({
             >{`${carrier.name} (${carrier.price} Kč)`}</Radio>
         )) || []
     const materialPricesCollection =
-        dataPreset?.materialPrices.map((material, i) => (
+        dataPreset?.materialPrices.map((material) => (
             <SelectItem value={material.material} key={material.material}>
                 {material.material}
             </SelectItem>
@@ -578,7 +578,7 @@ const FormWithModel = ({
                                 <SelectItem key={'high'}>{'Vysoká'}</SelectItem>
                             </Select>
 
-                            {dataPreset && (
+                            {material && (
                                 <Select
                                     isRequired
                                     label='Materiál'
